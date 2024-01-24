@@ -1,0 +1,1 @@
+# wsm-monitoring-service
