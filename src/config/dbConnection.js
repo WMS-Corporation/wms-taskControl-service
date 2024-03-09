@@ -21,6 +21,9 @@ async function connectDB(dbName) {
         db = client.db(dbName);
         const tasksCollection = db.collection(process.env.TASK_COLLECTION);
         collections.tasks = tasksCollection;
+        if(process.env.NODE_ENV === "test"){
+            collections.users = db.collection(process.env.USER_COLLECTION);
+        }
         console.log(`Successfully connected to database: ${db.databaseName} and collection: ${tasksCollection.collectionName}`);
         return db;
     } catch (error) {

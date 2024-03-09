@@ -5,13 +5,14 @@ const fs = require("fs");
 describe('Task testing', () => {
     let task;
 
-    beforeEach(() => {
+    beforeAll(() => {
         const jsonFilePath = path.resolve(__dirname, './Resources/MongoDB/WMS.Task.json')
         const taskData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf-8'))
         task = createTaskFromData(taskData)
     });
 
     it('should return the correct codTask', () => {
+        console.log(task)
         expect(task.codTask).toBe(undefined);
     });
 
@@ -29,10 +30,6 @@ describe('Task testing', () => {
 
     it('should return the status state', () => {
         expect(task.status).toBe('pending');
-    });
-
-    it('should return the correct quantity', () => {
-        expect(task.quantity).toBe('65');
     });
 
     it('should return the number of products', () => {
@@ -57,10 +54,5 @@ describe('Task testing', () => {
     it('should set status correctly', () => {
         task.status = 'Completed';
         expect(task.status).toBe('Completed');
-    });
-
-    it('should set quantity correctly', () => {
-        task.quantity = 65;
-        expect(task.quantity).toBe(65);
     });
 });

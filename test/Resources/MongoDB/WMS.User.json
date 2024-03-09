@@ -1,0 +1,18 @@
+[
+  {
+    "_codUser": "000897",
+    "_username": "Martin0075",
+    "_password": "$2y$10$mrpe.j2q/FaYrm9FBI/DfuFZMqiXRdLPkK0jHBFkJKAms2BVZwF12",
+    "_name": "Martin",
+    "_surname": "Marcolini",
+    "_type": "Admin"
+  },
+  {
+    "_codUser": "000898",
+    "_username": "Michele0098",
+    "_password": "palla",
+    "_name": "Michele",
+    "_surname": "Laddaga",
+    "_type": "Operational"
+  }
+]
