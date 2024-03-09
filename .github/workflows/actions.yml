@@ -44,6 +44,7 @@ jobs:
           DB_NAME_TEST: "WMS_TEST"
           DB_CONN_STRING: "mongodb://127.0.0.1:27017"
           TASK_COLLECTION: "Task"
+          USER_COLLECTION: "User"
           JWT_SECRET: "secret_key"
           PORT: "4003"
       - name: Run EsLint quality check
@@ -72,6 +73,7 @@ jobs:
           DB_NAME_TEST: "WMS_TEST"
           DB_CONN_STRING: "mongodb://127.0.0.1:27017"
           TASK_COLLECTION: "Task"
+          USER_COLLECTION: "User"
           JWT_SECRET: "secret_key"
           PORT: "4003"
 
