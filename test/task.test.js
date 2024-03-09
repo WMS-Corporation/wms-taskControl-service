@@ -12,7 +12,6 @@ describe('Task testing', () => {
     });
 
     it('should return the correct codTask', () => {
-        console.log(task)
         expect(task.codTask).toBe(undefined);
     });
 
