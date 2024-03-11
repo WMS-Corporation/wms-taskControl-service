@@ -5,7 +5,7 @@ const fs = require("fs")
 const {connectDB, collections} = require("../src/config/dbConnection");
 const {createTask} = require("../src/repositories/taskRepository");
 const {Task} = require("../src/entities/task");
-const {assignTask} = require("../src/services/taskServices");
+const {assignTask, getMyTasks} = require("../src/services/taskServices");
 
 dotenv.config()
 const mockResponse = () => {
@@ -15,7 +15,8 @@ const mockResponse = () => {
     return res
 };
 const req = {
-    body : ""
+    body : "",
+    user : ""
 }
 
 describe('User services testing', () => {
@@ -31,6 +32,7 @@ describe('User services testing', () => {
         const taskData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf-8'));
         await collections.tasks.insertOne(taskData)
         req.body = ""
+        req.user = ""
     })
 
     it('it should return 401 if the data are invalid', async () => {
@@ -80,6 +82,24 @@ describe('User services testing', () => {
 
         expect(res.status).toHaveBeenCalledWith(200)
     });
+
+    it('it should return 200 and the tasks assigned to this specific operator', async ()=>{
+        const res=mockResponse()
+        req.user = { _codUser: "000002"}
+
+        await getMyTasks(req, res)
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).not.toBeNull()
+    })
+
+    it('it should return 401 if there is not tasks assigned to this operator', async ()=>{
+        const res=mockResponse()
+        req.user = { _codUser: "000897"}
+
+        await getMyTasks(req, res)
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({message: "There is not a task assigned to this specific operator"})
+    })
 
 
 
