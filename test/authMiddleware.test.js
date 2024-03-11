@@ -12,7 +12,8 @@ const mockResponse = () => {
 };
 
 const req = {
-    method: "POST",
+    method: "",
+    url: "",
     headers: {},
     user: null
 };
@@ -29,6 +30,8 @@ describe("verifyToken middleware", ()=>{
         const jsonFilePath = path.resolve(__dirname, './Resources/MongoDB/WMS.User.json');
         const userData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf-8'));
         await collections.users.insertMany(userData)
+        req.method = ""
+        req.url = ""
     })
 
 
@@ -48,7 +51,28 @@ describe("verifyToken middleware", ()=>{
         expect(res.json).toHaveBeenCalledWith({message: "Invalid token"})
     })
 
-    it("should return 401 if user doesn't have the permission to does this operation", async()=>{
+    it("should return 401 if an operational user try to create a task", async()=>{
+        req.method="POST"
+        const res=mockResponse()
+        const token= jwt.sign({ id:'000898'}, process.env.JWT_SECRET);
+        req.headers={ authorization: `Bearer ${token}` }
+        await verifyToken (req,res,mockNext)
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({message: "Only admin users can perform this action"})
+    })
+
+    it("should return 401 if an operational user try to access to all tasks created", async()=>{
+        req.url="/all"
+        const res=mockResponse()
+        const token= jwt.sign({ id:'000898'}, process.env.JWT_SECRET);
+        req.headers={ authorization: `Bearer ${token}` }
+        await verifyToken (req,res,mockNext)
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({message: "Only admin users can perform this action"})
+    })
+
+    it("should return 401 if an operational user try to access to single tasks by code", async()=>{
+        req.url="/:codTask"
         const res=mockResponse()
         const token= jwt.sign({ id:'000898'}, process.env.JWT_SECRET);
         req.headers={ authorization: `Bearer ${token}` }

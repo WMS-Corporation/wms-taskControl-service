@@ -12,7 +12,7 @@ describe('Task testing', () => {
     });
 
     it('should return the correct codTask', () => {
-        expect(task.codTask).toBe(undefined);
+        expect(task.codTask).toBe("000543");
     });
 
     it('should return the correct codUser', () => {
