@@ -110,9 +110,14 @@ const getTaskByCode = asyncHandler(async (req, res) => {
  */
 const generateUniqueTaskCode = asyncHandler (async () => {
     let dbName = null;
-    if(process.env.NODE_ENV === 'test'){
-        dbName = process.env.DB_NAME_TEST
-    } else {
+    if(process.env.NODE_ENV === 'test1'){
+        dbName = process.env.DB_NAME_TEST1
+    } else if(process.env.NODE_ENV === 'test2') {
+        dbName = process.env.DB_NAME_TEST2
+        dbName = process.env.DB_NAME;
+    } else if(process.env.NODE_ENV === 'test3') {
+        dbName = process.env.DB_NAME_TEST3
+    } else{
         dbName = process.env.DB_NAME;
     }
 

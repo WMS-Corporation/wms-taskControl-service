@@ -6,8 +6,8 @@ const {createTask, findTaskByCode, getAllTasks, findTasksByCodeOperator} = requi
 
 describe('taskRepository testing', () => {
     beforeAll(async () => {
-        process.env.NODE_ENV = "test"
-        await connectDB(process.env.DB_NAME_TEST);
+        process.env.NODE_ENV = "test2"
+        await connectDB(process.env.DB_NAME_TEST2);
     });
 
     beforeEach(async() => {
