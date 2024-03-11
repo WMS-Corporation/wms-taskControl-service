@@ -1,7 +1,7 @@
 const {connectDB} = require("../config/dbConnection");
 const asyncHandler = require("express-async-handler");
 const {createTaskFromData} = require("../factories/taskFactory");
-const {createTask, findTasksByCodeOperator} = require("../repositories/taskRepository");
+const {createTask, findTasksByCodeOperator, getAllTasks} = require("../repositories/taskRepository");
 
 /**
  * Assigning a task to a specific operator.
@@ -50,6 +50,27 @@ const getMyTasks = asyncHandler(async(req, res) => {
 })
 
 /**
+ * Retrieves all tasks.
+ *
+ * This function handles the retrieval of all tasks from the database.
+ * It calls the getTasks function to fetch the task data.
+ * If the retrieval is successful, it returns the task data with HTTP status code 200 (OK).
+ * If the retrieval fails (e.g., invalid task data), it returns an error message with HTTP status code 401 (Unauthorized).
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Object} The HTTP response containing either the task data or an error message in JSON format.
+ */
+const getAll = asyncHandler(async(req, res) => {
+    const result = await getAllTasks()
+    if(result){
+        res.status(200).json(result)
+    } else {
+        res.status(401).json({message: 'Invalid task data'})
+    }
+})
+
+/**
  * Generates a unique task code.
  *
  * This function generates a unique task code by counting the total number of documents across all collections in the database.
@@ -81,5 +102,6 @@ const generateUniqueTaskCode = asyncHandler (async () => {
 
 module.exports = {
     assignTask,
-    getMyTasks
+    getMyTasks,
+    getAll
 }

@@ -2,7 +2,7 @@ const {connectDB, collections} = require("../src/config/dbConnection")
 const {Task} = require("../src/entities/task")
 const path = require("path")
 const fs = require("fs")
-const {createTask, findTaskByCode, getTasks, findTasksByCodeOperator} = require("../src/repositories/taskRepository");
+const {createTask, findTaskByCode, getAllTasks, findTasksByCodeOperator} = require("../src/repositories/taskRepository");
 
 describe('taskRepository testing', () => {
     beforeAll(async () => {
@@ -54,7 +54,7 @@ describe('taskRepository testing', () => {
     });
 
     it('should return all the tasks', async() => {
-        const result= await getTasks()
+        const result= await getAllTasks()
         const numDoc = await collections.tasks.countDocuments()
         expect(result.length).toEqual(numDoc)
     })

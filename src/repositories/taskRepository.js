@@ -21,7 +21,7 @@ const createTask = asyncHandler(async (task) => {
  *
  * @returns {Array|null} An array containing task data if retrieval is successful, otherwise null.
  */
-const getTasks = asyncHandler(async () => {
+const getAllTasks = asyncHandler(async () => {
     return await collections?.tasks?.find().toArray()
 })
 
@@ -51,7 +51,7 @@ const findTasksByCodeOperator = asyncHandler(async (codOperator) => {
 
 module.exports = {
     createTask,
-    getTasks,
+    getAllTasks,
     findTaskByCode,
     findTasksByCodeOperator
 }

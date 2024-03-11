@@ -5,7 +5,7 @@ const fs = require("fs")
 const {connectDB, collections} = require("../src/config/dbConnection");
 const {createTask} = require("../src/repositories/taskRepository");
 const {Task} = require("../src/entities/task");
-const {assignTask, getMyTasks} = require("../src/services/taskServices");
+const {assignTask, getMyTasks, getAll} = require("../src/services/taskServices");
 
 dotenv.config()
 const mockResponse = () => {
@@ -101,6 +101,14 @@ describe('User services testing', () => {
         expect(res.json).toHaveBeenCalledWith({message: "There is not a task assigned to this specific operator"})
     })
 
+    it('it should return 200 and all tasks that are stored', async() =>{
+        const res=mockResponse()
+
+        await getAll(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).not.toBeNull()
+    })
 
 
 });

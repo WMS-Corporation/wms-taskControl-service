@@ -35,6 +35,11 @@ describe('Task testing', () => {
         expect(task.productList.length).toBe(2);
     });
 
+    it('should set codOperator correctly', () => {
+        task.codOperator = '000015';
+        expect(task.codOperator).toBe('000015');
+    });
+
     it('should set codTask correctly', () => {
         task.codTask = '000005';
         expect(task.codTask).toBe('000005');

@@ -1,6 +1,6 @@
 const express = require('express');
 const {verifyToken} = require("./authMiddleware");
-const {assignTask, getMyTasks} = require("../services/taskServices");
+const {assignTask, getMyTasks, getAll} = require("../services/taskServices");
 const router = express.Router();
 
 router.get('/', (req, res) => {
@@ -8,5 +8,6 @@ router.get('/', (req, res) => {
 })
 router.post('/assignment', verifyToken, assignTask)
 router.get('/myTasks', verifyToken, getMyTasks)
+router.get('/all', verifyToken, getAll)
 
 module.exports = router
