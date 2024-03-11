@@ -1,5 +1,5 @@
 const { MongoClient } = require('mongodb');
-const { connectDB, collections } = require('../src/config/dbConnection');
+const { connectDB, collections, closeDB} = require('../src/config/dbConnection');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -17,6 +17,7 @@ describe('Database Connection', () => {
 
     afterAll(async () => {
         await connection.close();
+        await closeDB()
     });
 
     it('should connect to the database and collection', async () => {

@@ -1,4 +1,4 @@
-const {connectDB, collections} = require("../src/config/dbConnection")
+const {connectDB, collections, closeDB} = require("../src/config/dbConnection")
 const {Task} = require("../src/entities/task")
 const path = require("path")
 const fs = require("fs")
@@ -16,6 +16,9 @@ describe('taskRepository testing', () => {
         const taskData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf-8'));
         await collections.tasks.insertOne(taskData)
     })
+    afterAll(async () => {
+        await closeDB()
+    });
 
     it("should create a new task",async () =>{
         let productList = [

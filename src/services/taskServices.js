@@ -1,4 +1,4 @@
-const {connectDB} = require("../config/dbConnection");
+const {connectDB, closeDB} = require("../config/dbConnection");
 const asyncHandler = require("express-async-handler");
 const {createTaskFromData} = require("../factories/taskFactory");
 const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode} = require("../repositories/taskRepository");
@@ -124,6 +124,7 @@ const generateUniqueTaskCode = asyncHandler (async () => {
         const count = await collectionData.countDocuments()
         totalDocuments += count
     }
+
     const nextCode = totalDocuments + 1
     return nextCode.toString().padStart(6, '0')
 })

@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const {connectDB, collections} = require("../src/config/dbConnection");
+const {connectDB, collections, closeDB} = require("../src/config/dbConnection");
 const path = require("path");
 const fs = require("fs");
 const {verifyToken} = require("../src/routes/authMiddleware");
@@ -34,6 +34,9 @@ describe("verifyToken middleware", ()=>{
         req.url = ""
     })
 
+    afterAll(async () => {
+        await closeDB()
+    });
 
     it("should return 401 if token is not provided", async()=>{
         const res=mockResponse()

@@ -49,6 +49,21 @@ const findTasksByCodeOperator = asyncHandler(async (codOperator) => {
     return await collections?.tasks?.find({ _codOperator: codOperator }).toArray()
 });
 
+// /**
+//  * Updates user data based on a filter.
+//  *
+//  * This function updates user data based on the provided filter criteria and the update object.
+//  *
+//  * @param {Object} filter - The filter criteria to find the user(s) to update.
+//  * @param {Object} update - The update object containing the fields to update and their new values.
+//  * @returns {Object|null} The updated user data if the user is found, otherwise null.
+//  */
+// const updateUserData = asyncHandler(async(filter, update) => {
+//     const options = { returnOriginal: false}
+//     await collections?.users?.findOneAndUpdate(filter, update, options)
+//     return await collections?.users?.findOne(filter)
+// })
+
 module.exports = {
     createTask,
     getAllTasks,

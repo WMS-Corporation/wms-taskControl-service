@@ -2,7 +2,7 @@ const dotenv = require('dotenv')
 const {MongoClient} = require("mongodb")
 const path = require("path")
 const fs = require("fs")
-const {connectDB, collections} = require("../src/config/dbConnection");
+const {connectDB, collections, closeDB} = require("../src/config/dbConnection");
 const {createTask} = require("../src/repositories/taskRepository");
 const {Task} = require("../src/entities/task");
 const {assignTask, getMyTasks, getAll, getTaskByCode} = require("../src/services/taskServices");
@@ -36,6 +36,10 @@ describe('User services testing', () => {
         req.user = ""
         req.params = ""
     })
+
+    afterAll(async () => {
+        await closeDB()
+    });
 
     it('it should return 401 if the data are invalid', async () => {
         const res=mockResponse()

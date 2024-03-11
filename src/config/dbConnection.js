@@ -29,8 +29,27 @@ async function connectDB(dbName) {
     }
 }
 
+/**
+ * Closes the database connection.
+ *
+ * This function closes the MongoDB client connection and performs cleanup tasks.
+ */
+async function closeDB() {
+    try {
+        if (client) {
+            await client.close();
+            console.log('Database connection closed successfully.');
+        } else {
+            console.warn('No database connection to close.');
+        }
+    } catch (error) {
+        console.error('Error while closing database connection: ', error);
+    }
+}
+
 module.exports = {
     connectDB,
     collections,
-    db
+    db,
+    closeDB
 };
