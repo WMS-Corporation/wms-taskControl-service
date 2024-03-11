@@ -1,7 +1,7 @@
 const {connectDB} = require("../config/dbConnection");
 const asyncHandler = require("express-async-handler");
 const {createTaskFromData} = require("../factories/taskFactory");
-const {createTask, findTasksByCodeOperator, getAllTasks} = require("../repositories/taskRepository");
+const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode} = require("../repositories/taskRepository");
 
 /**
  * Assigning a task to a specific operator.
@@ -71,6 +71,34 @@ const getAll = asyncHandler(async(req, res) => {
 })
 
 /**
+ * Retrieves task by code.
+ *
+ * This function handles the retrieval of task based on the provided code.
+ * It extracts the task code from the request parameters.
+ * If the task code is provided, it calls the findTaskByCode function to search for the task in the database.
+ * If the task is found, it returns the task data with HTTP status code 200 (OK).
+ * If the task is not found, it returns an error message with HTTP status code 401 (Unauthorized).
+ * If the task code is invalid or missing, it returns an error message with HTTP status code 401 (Unauthorized).
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Object} The HTTP response containing either the task data or an error message in JSON format.
+ */
+const getTaskByCode = asyncHandler(async (req, res) => {
+    const taskCode = req.params.codTask
+    if(taskCode){
+        const task = await findTaskByCode(taskCode)
+        if(task){
+            res.status(200).json(task)
+        } else{
+            res.status(401).json({message: 'Task not found'})
+        }
+    }else{
+        res.status(401).json({message:'Invalid task data'})
+    }
+})
+
+/**
  * Generates a unique task code.
  *
  * This function generates a unique task code by counting the total number of documents across all collections in the database.
@@ -103,5 +131,6 @@ const generateUniqueTaskCode = asyncHandler (async () => {
 module.exports = {
     assignTask,
     getMyTasks,
-    getAll
+    getAll,
+    getTaskByCode
 }

@@ -5,7 +5,7 @@ const fs = require("fs")
 const {connectDB, collections} = require("../src/config/dbConnection");
 const {createTask} = require("../src/repositories/taskRepository");
 const {Task} = require("../src/entities/task");
-const {assignTask, getMyTasks, getAll} = require("../src/services/taskServices");
+const {assignTask, getMyTasks, getAll, getTaskByCode} = require("../src/services/taskServices");
 
 dotenv.config()
 const mockResponse = () => {
@@ -16,7 +16,8 @@ const mockResponse = () => {
 };
 const req = {
     body : "",
-    user : ""
+    user : "",
+    params: ""
 }
 
 describe('User services testing', () => {
@@ -33,6 +34,7 @@ describe('User services testing', () => {
         await collections.tasks.insertOne(taskData)
         req.body = ""
         req.user = ""
+        req.params = ""
     })
 
     it('it should return 401 if the data are invalid', async () => {
@@ -110,5 +112,30 @@ describe('User services testing', () => {
         expect(res.json).not.toBeNull()
     })
 
+    it('it should return 200 and the task with the taskCode specified', async ()=>{
+        const res=mockResponse()
+        req.params = { codTask: "000543" }
 
+        await getTaskByCode(req, res)
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).not.toBeNull()
+    })
+
+    it('it should return 401 if the taskCode is wrong', async ()=>{
+        const res=mockResponse()
+        req.params = { codTask: "000877" }
+
+        await getTaskByCode(req, res)
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({message: "Task not found"})
+    })
+
+    it('it should return 401 if the taskCode is not specified', async ()=>{
+        const res=mockResponse()
+        req.params = { codTask: "" }
+
+        await getTaskByCode(req, res)
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({message: "Invalid task data"})
+    })
 });

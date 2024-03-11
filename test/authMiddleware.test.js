@@ -72,7 +72,7 @@ describe("verifyToken middleware", ()=>{
     })
 
     it("should return 401 if an operational user try to access to single tasks by code", async()=>{
-        req.url="/:codTask"
+        req.url="/:000005"
         const res=mockResponse()
         const token= jwt.sign({ id:'000898'}, process.env.JWT_SECRET);
         req.headers={ authorization: `Bearer ${token}` }
