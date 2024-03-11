@@ -41,9 +41,9 @@ jobs:
         run: npm test
         env:
           DB_NAME: "WMS"
-          DB_NAME_TEST1: "WMS_TEST1"
-          DB_NAME_TEST2: "WMS_TEST2"
-          DB_NAME_TEST3: "WMS_TEST3"
+          DB_NAME_TEST_MIDDLEWARE: "WMS_TEST_MIDDLEWARE"
+          DB_NAME_TEST_REPOSITORY: "WMS_TEST2_REPOSITORY"
+          DB_NAME_TEST_SERVICES: "WMS_TEST3_SERVICES"
           DB_CONN_STRING: "mongodb://127.0.0.1:27017"
           TASK_COLLECTION: "Task"
           USER_COLLECTION: "User"
@@ -72,9 +72,9 @@ jobs:
         run: npm run coverage
         env:
           DB_NAME: "WMS"
-          DB_NAME_TEST1: "WMS_TEST1"
-          DB_NAME_TEST2: "WMS_TEST2"
-          DB_NAME_TEST3: "WMS_TEST3"
+          DB_NAME_TEST_MIDDLEWARE: "WMS_TEST_MIDDLEWARE"
+          DB_NAME_TEST_REPOSITORY: "WMS_TEST2_REPOSITORY"
+          DB_NAME_TEST_SERVICES: "WMS_TEST3_SERVICES"
           DB_CONN_STRING: "mongodb://127.0.0.1:27017"
           TASK_COLLECTION: "Task"
           USER_COLLECTION: "User"

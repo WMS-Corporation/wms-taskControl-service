@@ -1,7 +1,7 @@
 const {connectDB, closeDB} = require("../config/dbConnection");
 const asyncHandler = require("express-async-handler");
 const {createTaskFromData} = require("../factories/taskFactory");
-const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode} = require("../repositories/taskRepository");
+const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateTaskData} = require("../repositories/taskRepository");
 
 /**
  * Assigning a task to a specific operator.
@@ -45,7 +45,7 @@ const getMyTasks = asyncHandler(async(req, res) => {
     if(result.length !== 0){
         res.status(200).json(result)
     } else {
-        res.status(401).json({message: 'There is not a task assigned to this specific operator'})
+        res.status(401).json({message: 'There is not task assigned to this specific operator'})
     }
 })
 
@@ -99,6 +99,43 @@ const getTaskByCode = asyncHandler(async (req, res) => {
 })
 
 /**
+ * Updates the status of a task.
+ *
+ * This function handles the request to update the status of a task.
+ * It first checks if the operator has tasks assigned and then searches for the task with the specified task code.
+ * If the task is found, it updates the task status with the provided status in the request body.
+ * If the operator does not have any tasks assigned, it returns a 401 status with a corresponding message.
+ * If the specified task is not assigned to the operator, it returns a 401 status with a message indicating that.
+ *
+ * @param {Object} req - The request object containing the task code parameter and the new status in the request body.
+ * @param {Object} res - The response object used to send the result of the status update operation.
+ */
+const updateTaskStatus = asyncHandler(async (req, res) => {
+    const codTask = req.params.codTask
+    const tasksOfOperator = await findTasksByCodeOperator(req.user._codUser)
+    let taskFound = false;
+
+    if(tasksOfOperator.length !== 0){
+        for (const task of tasksOfOperator) {
+            if (task._codTask === codTask) {
+                taskFound = true;
+                const filter = { _codTask: codTask }
+                const update = { $set: { _status: req.body.status } }
+                const updatedTask = await updateTaskData(filter, update)
+                res.status(200).json(updatedTask)
+                break;
+            }
+        }
+    } else{
+        res.status(401).json({message: 'This operator do not have tasks assigned'})
+    }
+
+    if(!taskFound){
+        res.status(401).json({message: 'This operator do not have this specific task assigned'})
+    }
+})
+
+/**
  * Generates a unique task code.
  *
  * This function generates a unique task code by counting the total number of documents across all collections in the database.
@@ -110,13 +147,12 @@ const getTaskByCode = asyncHandler(async (req, res) => {
  */
 const generateUniqueTaskCode = asyncHandler (async () => {
     let dbName = null;
-    if(process.env.NODE_ENV === 'test1'){
-        dbName = process.env.DB_NAME_TEST1
-    } else if(process.env.NODE_ENV === 'test2') {
-        dbName = process.env.DB_NAME_TEST2
-        dbName = process.env.DB_NAME;
-    } else if(process.env.NODE_ENV === 'test3') {
-        dbName = process.env.DB_NAME_TEST3
+    if(process.env.NODE_ENV === 'testMiddleware'){
+        dbName = process.env.DB_NAME_TEST_MIDDLEWARE
+    } else if(process.env.NODE_ENV === 'testRepository') {
+        dbName = process.env.DB_NAME_TEST_REPOSITORY
+    } else if(process.env.NODE_ENV === 'testServices') {
+        dbName = process.env.DB_NAME_TEST_SERVICES
     } else{
         dbName = process.env.DB_NAME;
     }
@@ -138,5 +174,6 @@ module.exports = {
     assignTask,
     getMyTasks,
     getAll,
-    getTaskByCode
+    getTaskByCode,
+    updateTaskStatus
 }

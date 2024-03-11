@@ -21,8 +21,8 @@ const req = {
 const mockNext = jest.fn();
 describe("verifyToken middleware", ()=>{
     beforeAll(async () => {
-        process.env.NODE_ENV = "test1"
-        await connectDB(process.env.DB_NAME_TEST1);
+        process.env.NODE_ENV = "testMiddleware"
+        await connectDB(process.env.DB_NAME_TEST_MIDDLEWARE);
     });
 
     beforeEach(async() => {

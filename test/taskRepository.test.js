@@ -2,12 +2,12 @@ const {connectDB, collections, closeDB} = require("../src/config/dbConnection")
 const {Task} = require("../src/entities/task")
 const path = require("path")
 const fs = require("fs")
-const {createTask, findTaskByCode, getAllTasks, findTasksByCodeOperator} = require("../src/repositories/taskRepository");
+const {createTask, findTaskByCode, getAllTasks, findTasksByCodeOperator, updateTaskData} = require("../src/repositories/taskRepository");
 
 describe('taskRepository testing', () => {
     beforeAll(async () => {
-        process.env.NODE_ENV = "test2"
-        await connectDB(process.env.DB_NAME_TEST2);
+        process.env.NODE_ENV = "testRepository"
+        await connectDB(process.env.DB_NAME_TEST_REPOSITORY);
     });
 
     beforeEach(async() => {
@@ -75,6 +75,22 @@ describe('taskRepository testing', () => {
 
         expect(tasks.length).toEqual(0)
     });
+
+    it('should return an updated task with new status', async() => {
+        const filter = { _codTask: "000543" }
+        const update = { $set: { _status: "Completed" } }
+
+        const updatedTask = await updateTaskData(filter, update)
+        expect(updatedTask._status).toEqual("Completed")
+    })
+
+    it('should return null if the filter is not correct', async() => {
+        const filter = { _codTask: "" }
+        const update = { $set: { _status: "Completed" } }
+
+        const updatedTask = await updateTaskData(filter, update)
+        expect(updatedTask).toBeNull()
+    })
 
 
 });

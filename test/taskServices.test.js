@@ -5,7 +5,7 @@ const fs = require("fs")
 const {connectDB, collections, closeDB} = require("../src/config/dbConnection");
 const {createTask} = require("../src/repositories/taskRepository");
 const {Task} = require("../src/entities/task");
-const {assignTask, getMyTasks, getAll, getTaskByCode} = require("../src/services/taskServices");
+const {assignTask, getMyTasks, getAll, getTaskByCode, updateTaskStatus} = require("../src/services/taskServices");
 
 dotenv.config()
 const mockResponse = () => {
@@ -23,8 +23,8 @@ const req = {
 describe('User services testing', () => {
 
     beforeAll(async () => {
-        process.env.NODE_ENV = "test3"
-        await connectDB(process.env.DB_NAME_TEST3);
+        process.env.NODE_ENV = "testServices"
+        await connectDB(process.env.DB_NAME_TEST_SERVICES);
     });
 
     beforeEach(async() => {
@@ -104,7 +104,7 @@ describe('User services testing', () => {
 
         await getMyTasks(req, res)
         expect(res.status).toHaveBeenCalledWith(401)
-        expect(res.json).toHaveBeenCalledWith({message: "There is not a task assigned to this specific operator"})
+        expect(res.json).toHaveBeenCalledWith({message: "There is not task assigned to this specific operator"})
     })
 
     it('it should return 200 and all tasks that are stored', async() =>{
@@ -141,5 +141,38 @@ describe('User services testing', () => {
         await getTaskByCode(req, res)
         expect(res.status).toHaveBeenCalledWith(401)
         expect(res.json).toHaveBeenCalledWith({message: "Invalid task data"})
+    })
+
+    it('it should return 200 and the task updated with a new status', async ()=>{
+        const res=mockResponse()
+        req.user = { _codUser: "000002"}
+        req.params = { codTask: "000543" }
+        req.body = { status: "Completed"}
+
+        await updateTaskStatus(req, res)
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).not.toBeNull()
+    })
+
+    it('it should return 401 if updating task status with task code that is not assigned to this specific operator', async ()=>{
+        const res=mockResponse()
+        req.user = { _codUser: "000002"}
+        req.params = { codTask: "000544" }
+        req.body = { status: "Completed"}
+
+        await updateTaskStatus(req, res)
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({message: "This operator do not have this specific task assigned"})
+    })
+
+    it('it should return 401 if one tries to updating a task status, but the operator do not have task assigned', async ()=>{
+        const res=mockResponse()
+        req.user = { _codUser: "000003"}
+        req.params = { codTask: "000543" }
+        req.body = { status: "Completed"}
+
+        await updateTaskStatus(req, res)
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({message: "This operator do not have tasks assigned"})
     })
 });
