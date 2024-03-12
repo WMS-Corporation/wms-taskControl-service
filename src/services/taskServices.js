@@ -1,4 +1,4 @@
-const {connectDB, closeDB} = require("../config/dbConnection");
+const {connectDB, closeDB, db} = require("../config/dbConnection");
 const asyncHandler = require("express-async-handler");
 const {createTaskFromData} = require("../factories/taskFactory");
 const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateTaskData} = require("../repositories/taskRepository");
@@ -146,22 +146,10 @@ const updateTaskStatus = asyncHandler(async (req, res) => {
  * @returns {string} The generated unique task code.
  */
 const generateUniqueTaskCode = asyncHandler (async () => {
-    let dbName = null;
-    if(process.env.NODE_ENV === 'testMiddleware'){
-        dbName = process.env.DB_NAME_TEST_MIDDLEWARE
-    } else if(process.env.NODE_ENV === 'testRepository') {
-        dbName = process.env.DB_NAME_TEST_REPOSITORY
-    } else if(process.env.NODE_ENV === 'testServices') {
-        dbName = process.env.DB_NAME_TEST_SERVICES
-    } else{
-        dbName = process.env.DB_NAME;
-    }
-
-    const myDB = await connectDB(dbName)
-    const collections = await myDB.listCollections().toArray()
+    const collections = await db.instance.listCollections().toArray()
     let totalDocuments = 0
     for (const collectionInfo of collections){
-        const collectionData = myDB.collection(collectionInfo.name)
+        const collectionData = db.instance.collection(collectionInfo.name)
         const count = await collectionData.countDocuments()
         totalDocuments += count
     }

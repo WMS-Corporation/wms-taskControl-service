@@ -23,7 +23,6 @@ const req = {
 describe('User services testing', () => {
 
     beforeAll(async () => {
-        process.env.NODE_ENV = "testServices"
         await connectDB(process.env.DB_NAME_TEST_SERVICES);
     });
 

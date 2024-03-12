@@ -6,7 +6,6 @@ const {createTask, findTaskByCode, getAllTasks, findTasksByCodeOperator, updateT
 
 describe('taskRepository testing', () => {
     beforeAll(async () => {
-        process.env.NODE_ENV = "testRepository"
         await connectDB(process.env.DB_NAME_TEST_REPOSITORY);
     });
 

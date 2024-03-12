@@ -5,7 +5,7 @@ dotenv.config();
 
 const collections = {};
 let client = null;
-let db = null;
+const db = {};
 
 /**
  * Connects to the database.
@@ -18,11 +18,11 @@ async function connectDB(dbName) {
     try {
         client = new MongoClient(process.env.DB_CONN_STRING);
         await client.connect();
-        db = client.db(dbName);
-        const tasksCollection = db.collection(process.env.TASK_COLLECTION);
+        db.instance = client.db(dbName);
+        const tasksCollection = db.instance.collection(process.env.TASK_COLLECTION);
         collections.tasks = tasksCollection;
-        collections.users = db.collection(process.env.USER_COLLECTION);
-        console.log(`Successfully connected to database: ${db.databaseName} and collection: ${tasksCollection.collectionName}`);
+        collections.users = db.instance.collection(process.env.USER_COLLECTION);
+        console.log(`Successfully connected to database: ${db.instance.databaseName} and collection: ${tasksCollection.collectionName}`);
         return db;
     } catch (error) {
         console.error('Error during the connection to db: ', error);
