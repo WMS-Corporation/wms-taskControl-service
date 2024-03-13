@@ -10,8 +10,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-latest, macos-latest ]
         node-version: [ 18, 20 ]
+        mongodb-version: [ '6.0' ]
+    timeout-minutes: 3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,12 +24,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-
+      - name: Start MongoDB
+        uses: ankane/setup-mongodb@v1
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
       - name: Install Dependencies
         run: npm install
 
       - name: Run Tests
         run: npm test
-
+        env:
+          DB_NAME: "WMS"
+          DB_NAME_TEST_MIDDLEWARE: "WMS_TEST_MIDDLEWARE"
+          DB_NAME_TEST_REPOSITORY: "WMS_TEST_REPOSITORY"
+          DB_NAME_TEST_SERVICES: "WMS_TEST_SERVICES"
+          DB_CONN_STRING: "mongodb://127.0.0.1:27017"
+          TASK_COLLECTION: "Task"
+          USER_COLLECTION: "User"
+          JWT_SECRET: "secret_key"
+          PORT: "4003"
       - name: Run EsLint quality check
         run: npm run eslint
