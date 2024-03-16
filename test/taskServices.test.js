@@ -5,7 +5,7 @@ const fs = require("fs")
 const {connectDB, collections, closeDB} = require("../src/config/dbConnection");
 const {createTask} = require("../src/repositories/taskRepository");
 const {Task} = require("../src/entities/task");
-const {assignTask, getMyTasks, getAll, getTaskByCode, updateTaskStatus} = require("../src/services/taskServices");
+const {assignTask, getMyTasks, getAll, getTaskByCode, updateTaskStatus, updateTaskByCode} = require("../src/services/taskServices");
 
 dotenv.config()
 const mockResponse = () => {
@@ -146,9 +146,9 @@ describe('User services testing', () => {
         const res=mockResponse()
         req.user = { _codUser: "000002"}
         req.params = { codTask: "000543" }
-        req.body = { status: "Completed"}
+        req.body = { _status: "Completed"}
 
-        await updateTaskStatus(req, res)
+        await updateTaskByCode(req, res)
         expect(res.status).toHaveBeenCalledWith(200)
         expect(res.json).not.toBeNull()
     })
@@ -157,9 +157,9 @@ describe('User services testing', () => {
         const res=mockResponse()
         req.user = { _codUser: "000002"}
         req.params = { codTask: "000544" }
-        req.body = { status: "Completed"}
+        req.body = { _status: "Completed"}
 
-        await updateTaskStatus(req, res)
+        await updateTaskByCode(req, res)
         expect(res.status).toHaveBeenCalledWith(401)
         expect(res.json).toHaveBeenCalledWith({message: "This operator do not have this specific task assigned"})
     })
@@ -168,9 +168,9 @@ describe('User services testing', () => {
         const res=mockResponse()
         req.user = { _codUser: "000003"}
         req.params = { codTask: "000543" }
-        req.body = { status: "Completed"}
+        req.body = { _status: "Completed"}
 
-        await updateTaskStatus(req, res)
+        await updateTaskByCode(req, res)
         expect(res.status).toHaveBeenCalledWith(401)
         expect(res.json).toHaveBeenCalledWith({message: "This operator do not have tasks assigned"})
     })

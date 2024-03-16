@@ -1,4 +1,4 @@
-const {connectDB, closeDB, db} = require("../config/dbConnection");
+const { db} = require("../config/dbConnection");
 const asyncHandler = require("express-async-handler");
 const {createTaskFromData} = require("../factories/taskFactory");
 const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateTaskData} = require("../repositories/taskRepository");
@@ -99,18 +99,18 @@ const getTaskByCode = asyncHandler(async (req, res) => {
 })
 
 /**
- * Updates the status of a task.
+ * Updates the data of a task.
  *
- * This function handles the request to update the status of a task.
+ * This function handles the request to update the data of a task.
  * It first checks if the operator has tasks assigned and then searches for the task with the specified task code.
- * If the task is found, it updates the task status with the provided status in the request body.
+ * If the task is found, it updates the task data with the provided data in the request body.
  * If the operator does not have any tasks assigned, it returns a 401 status with a corresponding message.
  * If the specified task is not assigned to the operator, it returns a 401 status with a message indicating that.
  *
- * @param {Object} req - The request object containing the task code parameter and the new status in the request body.
- * @param {Object} res - The response object used to send the result of the status update operation.
+ * @param {Object} req - The request object containing the task code parameter and the new data in the request body.
+ * @param {Object} res - The response object used to send the result of the task update operation.
  */
-const updateTaskStatus = asyncHandler(async (req, res) => {
+const updateTaskByCode = asyncHandler(async (req, res) => {
     const codTask = req.params.codTask
     const tasksOfOperator = await findTasksByCodeOperator(req.user._codUser)
     let taskFound = false;
@@ -120,7 +120,7 @@ const updateTaskStatus = asyncHandler(async (req, res) => {
             if (task._codTask === codTask) {
                 taskFound = true;
                 const filter = { _codTask: codTask }
-                const update = { $set: { _status: req.body.status } }
+                const update = { $set: req.body}
                 const updatedTask = await updateTaskData(filter, update)
                 res.status(200).json(updatedTask)
                 break;
@@ -163,5 +163,5 @@ module.exports = {
     getMyTasks,
     getAll,
     getTaskByCode,
-    updateTaskStatus
+    updateTaskByCode
 }
