@@ -8,7 +8,6 @@ describe('Database Connection', () => {
     let db;
     let tasksCollection;
 
-
     beforeAll(async () => {
         connection = await MongoClient.connect(process.env.DB_CONN_STRING);
         db = connection.db(process.env.DB_NAME);

@@ -12,7 +12,7 @@ const db = {};
  *
  * This function establishes a connection to the MongoDB database using the connection string
  * specified in the environment variables. It initializes the MongoDB client, connects to the
- * database, and sets up the users collection for further database operations.
+ * database, and sets up the users and tasks collection for further database operations.
  */
 async function connectDB(dbName) {
     try {
@@ -22,6 +22,7 @@ async function connectDB(dbName) {
         const tasksCollection = db.instance.collection(process.env.TASK_COLLECTION);
         collections.tasks = tasksCollection;
         collections.users = db.instance.collection(process.env.USER_COLLECTION);
+        collections.counter = db.instance.collection(process.env.COUNTER_COLLECTION);
         console.log(`Successfully connected to database: ${db.instance.databaseName} and collection: ${tasksCollection.collectionName}`);
         return db;
     } catch (error) {

@@ -1,7 +1,7 @@
-const { db} = require("../config/dbConnection");
+
 const asyncHandler = require("express-async-handler");
 const {createTaskFromData} = require("../factories/taskFactory");
-const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateTaskData} = require("../repositories/taskRepository");
+const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateTaskData, generateUniqueTaskCode} = require("../repositories/taskRepository");
 
 /**
  * Assigning a task to a specific operator.
@@ -17,7 +17,8 @@ const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateT
  */
 const assignTask = asyncHandler(async(req, res) => {
     const task = createTaskFromData(req.body)
-    if(!task.type || !task.date || !task.status || !task.codOperator || !task.productList){
+    console.log(task)
+    if(!task.type || !task.date || !task.status || !task.codOperator || !task.productCodeList){
         return res.status(401).json({ message: 'Invalid task data' })
     }
 
@@ -126,6 +127,12 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
                 break;
             }
         }
+    } else if(req.user._type === "Admin"){
+        taskFound = true;
+        const filter = { _codTask: codTask }
+        const update = { $set: req.body}
+        const updatedTask = await updateTaskData(filter, update)
+        res.status(200).json(updatedTask)
     } else{
         res.status(401).json({message: 'This operator do not have tasks assigned'})
     }
@@ -133,29 +140,6 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
     if(!taskFound){
         res.status(401).json({message: 'This operator do not have this specific task assigned'})
     }
-})
-
-/**
- * Generates a unique task code.
- *
- * This function generates a unique task code by counting the total number of documents across all collections in the database.
- * It connects to the appropriate database based on the environment (either test or production).
- * It then counts the total number of documents in each collection and calculates the next available task code.
- * The generated user code is padded with leading zeros to ensure it has a fixed length of 6 characters.
- *
- * @returns {string} The generated unique task code.
- */
-const generateUniqueTaskCode = asyncHandler (async () => {
-    const collections = await db.instance.listCollections().toArray()
-    let totalDocuments = 0
-    for (const collectionInfo of collections){
-        const collectionData = db.instance.collection(collectionInfo.name)
-        const count = await collectionData.countDocuments()
-        totalDocuments += count
-    }
-
-    const nextCode = totalDocuments + 1
-    return nextCode.toString().padStart(6, '0')
 })
 
 module.exports = {

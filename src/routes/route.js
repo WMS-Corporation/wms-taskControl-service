@@ -4,7 +4,7 @@ const {assignTask, getMyTasks, getAll, getTaskByCode, updateTaskByCode} = requir
 const router = express.Router();
 
 router.get('/', (req, res) => {
-    res.send('Hello World');
+    res.status(200).send('OK');
 })
 router.post('/assignment', verifyToken, assignTask)
 router.get('/myTasks', verifyToken, getMyTasks)

@@ -9,7 +9,7 @@ const {Task} = require("../entities/task");
  * @returns {Task} The created task object.
  */
 function createTaskFromData(taskData) {
-    return new Task(taskData._codOperator, taskData._date, taskData._type, taskData._status, taskData._productList, taskData._codTask);
+    return new Task(taskData._codOperator, taskData._date, taskData._type, taskData._status, taskData._productCodeList, taskData._codTask);
 }
 
 module.exports = {createTaskFromData}
