@@ -17,7 +17,6 @@ const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateT
  */
 const assignTask = asyncHandler(async(req, res) => {
     const task = createTaskFromData(req.body)
-    console.log(task)
     if(!task.type || !task.date || !task.status || !task.codOperator || !task.productCodeList){
         return res.status(401).json({ message: 'Invalid task data' })
     }
