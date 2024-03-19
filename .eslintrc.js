@@ -3,6 +3,7 @@ module.exports = {
         node: true,
         commonjs: true,
         es2021: true,
+        jest: true
     },
     extends: ["eslint:recommended"],
     overrides: [
@@ -28,5 +29,4 @@ module.exports = {
         "brace-style": ["error", "1tbs"], // Tiene gli else sulla stessa linea della parentesi graffa.
         "no-useless-escape": 0,
     },
-    ignorePatterns: ["test/**/*.js"],
 };

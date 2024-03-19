@@ -1,7 +1,7 @@
-const {connectDB, closeDB, db} = require("../config/dbConnection");
+
 const asyncHandler = require("express-async-handler");
 const {createTaskFromData} = require("../factories/taskFactory");
-const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateTaskData} = require("../repositories/taskRepository");
+const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateTaskData, generateUniqueTaskCode} = require("../repositories/taskRepository");
 
 /**
  * Assigning a task to a specific operator.
@@ -17,7 +17,7 @@ const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateT
  */
 const assignTask = asyncHandler(async(req, res) => {
     const task = createTaskFromData(req.body)
-    if(!task.type || !task.date || !task.status || !task.codOperator || !task.productList){
+    if(!task.type || !task.date || !task.status || !task.codOperator || !task.productCodeList){
         return res.status(401).json({ message: 'Invalid task data' })
     }
 
@@ -99,18 +99,18 @@ const getTaskByCode = asyncHandler(async (req, res) => {
 })
 
 /**
- * Updates the status of a task.
+ * Updates the data of a task.
  *
- * This function handles the request to update the status of a task.
+ * This function handles the request to update the data of a task.
  * It first checks if the operator has tasks assigned and then searches for the task with the specified task code.
- * If the task is found, it updates the task status with the provided status in the request body.
+ * If the task is found, it updates the task data with the provided data in the request body.
  * If the operator does not have any tasks assigned, it returns a 401 status with a corresponding message.
  * If the specified task is not assigned to the operator, it returns a 401 status with a message indicating that.
  *
- * @param {Object} req - The request object containing the task code parameter and the new status in the request body.
- * @param {Object} res - The response object used to send the result of the status update operation.
+ * @param {Object} req - The request object containing the task code parameter and the new data in the request body.
+ * @param {Object} res - The response object used to send the result of the task update operation.
  */
-const updateTaskStatus = asyncHandler(async (req, res) => {
+const updateTaskByCode = asyncHandler(async (req, res) => {
     const codTask = req.params.codTask
     const tasksOfOperator = await findTasksByCodeOperator(req.user._codUser)
     let taskFound = false;
@@ -120,12 +120,18 @@ const updateTaskStatus = asyncHandler(async (req, res) => {
             if (task._codTask === codTask) {
                 taskFound = true;
                 const filter = { _codTask: codTask }
-                const update = { $set: { _status: req.body.status } }
+                const update = { $set: req.body}
                 const updatedTask = await updateTaskData(filter, update)
                 res.status(200).json(updatedTask)
                 break;
             }
         }
+    } else if(req.user._type === "Admin"){
+        taskFound = true;
+        const filter = { _codTask: codTask }
+        const update = { $set: req.body}
+        const updatedTask = await updateTaskData(filter, update)
+        res.status(200).json(updatedTask)
     } else{
         res.status(401).json({message: 'This operator do not have tasks assigned'})
     }
@@ -135,33 +141,10 @@ const updateTaskStatus = asyncHandler(async (req, res) => {
     }
 })
 
-/**
- * Generates a unique task code.
- *
- * This function generates a unique task code by counting the total number of documents across all collections in the database.
- * It connects to the appropriate database based on the environment (either test or production).
- * It then counts the total number of documents in each collection and calculates the next available task code.
- * The generated user code is padded with leading zeros to ensure it has a fixed length of 6 characters.
- *
- * @returns {string} The generated unique task code.
- */
-const generateUniqueTaskCode = asyncHandler (async () => {
-    const collections = await db.instance.listCollections().toArray()
-    let totalDocuments = 0
-    for (const collectionInfo of collections){
-        const collectionData = db.instance.collection(collectionInfo.name)
-        const count = await collectionData.countDocuments()
-        totalDocuments += count
-    }
-
-    const nextCode = totalDocuments + 1
-    return nextCode.toString().padStart(6, '0')
-})
-
 module.exports = {
     assignTask,
     getMyTasks,
     getAll,
     getTaskByCode,
-    updateTaskStatus
+    updateTaskByCode
 }

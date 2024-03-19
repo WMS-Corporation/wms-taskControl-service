@@ -1,4 +1,4 @@
-const { Task } = require('../src/entities/task');
+
 const {createTaskFromData} = require("../src/factories/taskFactory");
 const path = require("path");
 const fs = require("fs");
@@ -32,7 +32,7 @@ describe('Task testing', () => {
     });
 
     it('should return the number of products', () => {
-        expect(task.productList.length).toBe(2);
+        expect(task.productCodeList.length).toBe(2);
     });
 
     it('should set codOperator correctly', () => {
