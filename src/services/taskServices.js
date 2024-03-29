@@ -115,7 +115,26 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
     const tasksOfOperator = await findTasksByCodeOperator(req.user._codUser)
     let taskFound = false;
 
-    if(tasksOfOperator.length !== 0){
+    const validFields = [
+        "_codOperator",
+        "_date",
+        "_type",
+        "_status",
+        "_productCodeList",
+    ];
+
+    let foundValidField = false;
+
+    for (const field of validFields) {
+        if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+            foundValidField = true
+            break;
+        }
+    }
+
+    if(!foundValidField){
+        res.status(401).json({message: 'Task does not contain any of the specified fields.'})
+    } else {
         for (const task of tasksOfOperator) {
             if (task._codTask === codTask) {
                 taskFound = true;
@@ -126,19 +145,23 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
                 break;
             }
         }
-    } else if(req.user._type === "Admin"){
-        taskFound = true;
-        const filter = { _codTask: codTask }
-        const update = { $set: req.body}
-        const updatedTask = await updateTaskData(filter, update)
-        res.status(200).json(updatedTask)
-    } else{
-        res.status(401).json({message: 'This operator do not have tasks assigned'})
+        if(!taskFound && req.user._type === "Admin"){
+            const task = await findTaskByCode(codTask)
+            if(task){
+                const filter = { _codTask: codTask }
+                const update = { $set: req.body}
+                const updatedTask = await updateTaskData(filter, update)
+                res.status(200).json(updatedTask)
+            } else {
+                res.status(401).json({message: 'Task not found'})
+            }
+
+        }
+        if(!taskFound && req.user._type !== "Admin"){
+            res.status(401).json({message: 'This operator do not have this specific task assigned'})
+        }
     }
 
-    if(!taskFound){
-        res.status(401).json({message: 'This operator do not have this specific task assigned'})
-    }
 })
 
 module.exports = {

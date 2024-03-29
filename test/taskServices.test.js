@@ -3,7 +3,7 @@ const path = require("path")
 const fs = require("fs")
 const {connectDB, collections, closeDB} = require("../src/config/dbConnection");
 const {assignTask, getMyTasks, getAll, getTaskByCode, updateTaskByCode} = require("../src/services/taskServices");
-
+const {describe, beforeEach, it, expect, beforeAll, afterAll} = require('@jest/globals')
 dotenv.config()
 const mockResponse = () => {
     const res = {}
@@ -154,6 +154,45 @@ describe('User services testing', () => {
 
         await updateTaskByCode(req, res)
         expect(res.status).toHaveBeenCalledWith(401)
-        expect(res.json).toHaveBeenCalledWith({message: "This operator do not have tasks assigned"})
+        expect(res.json).toHaveBeenCalledWith({message: "This operator do not have this specific task assigned"})
+    })
+
+    it('it should return 401 if try to updating field that is not specified for the task ', async () => {
+        const res = mockResponse()
+        const req = {
+            user:{
+                _codUser:"000002"
+            },
+            params: {
+                codTask: "000543"
+            }, body:{
+                _name: "Order 1"
+            }
+        };
+        await updateTaskByCode(req, res)
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({message: "Task does not contain any of the specified fields."})
+    })
+
+    it('it should return 200 if the admin try to update task with a new status', async () => {
+        const res = mockResponse()
+        req.user = { _codUser: "000001", _type: "Admin"}
+        req.params = { codTask: "000543" }
+        req.body = { _status: "Completed"}
+
+        await updateTaskByCode(req, res)
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).not.toBeNull()
+    })
+
+    it('it should return 200 if the admin try to update task that not exists', async () => {
+        const res = mockResponse()
+        req.user = { _codUser: "000001", _type: "Admin"}
+        req.params = { codTask: "001543" }
+        req.body = { _status: "Completed"}
+
+        await updateTaskByCode(req, res)
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({message: "Task not found"})
     })
 });

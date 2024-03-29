@@ -3,6 +3,7 @@ const {Task} = require("../src/entities/task")
 const path = require("path")
 const fs = require("fs")
 const {createTask, findTaskByCode, getAllTasks, findTasksByCodeOperator, updateTaskData} = require("../src/repositories/taskRepository");
+const {describe, beforeEach, it, expect, beforeAll, afterAll} = require('@jest/globals')
 
 describe('taskRepository testing', () => {
     beforeAll(async () => {
