@@ -8,7 +8,7 @@ const router = require('./src/routes/route')
 * */
 const taskControlServicePort = process.env.PORT || 4003;
 let corsOptions = {
-    origin: new RegExp(`http:\/\/localhost:${taskControlServicePort}\/.*`),
+    origin: new RegExp(`http:\/\/wms-task:${taskControlServicePort}\/.*`),
 };
 dotenv.config();
 const app = express();
