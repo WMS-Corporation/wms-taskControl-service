@@ -31,43 +31,36 @@ const assignTask = asyncHandler(async(req, res) => {
 })
 
 /**
- * Retrieves the task/tasks information about the specific operator.
+ * Retrieves tasks based on user type.
  *
- * This function handles the retrieval of tasks information.
- * It returns the tasks data for the specific operator.
+ * This function retrieves tasks either assigned to a specific operational user or all tasks available if the call is made by an Admin.
+ * If the user is of type "Operational", it fetches tasks assigned
+ * to that specific operator using their code. If no tasks are found, it returns an error message.
+ * If the user is an "Admin", it fetches all tasks. If the retrieval is successful,
+ * it returns the task data with HTTP status code 200 (OK). If the retrieval fails (e.g., invalid task data),
+ * it returns an error message with HTTP status code 401 (Unauthorized).
  *
- * @param {Object} req - The request object containing the Operator information.
- * @param {Object} res - The response object.
- * @returns {Object} The HTTP response with the task/tasks that has been assigned to the operator in JSON format.
- */
-const getMyTasks = asyncHandler(async(req, res) => {
-    const result = await findTasksByCodeOperator(req.user._codUser)
-    if(result.length !== 0){
-        res.status(200).json(result)
-    } else {
-        res.status(401).json({message: 'There is not task assigned to this specific operator'})
-    }
-})
-
-/**
- * Retrieves all tasks.
- *
- * This function handles the retrieval of all tasks from the database.
- * It calls the getTasks function to fetch the task data.
- * If the retrieval is successful, it returns the task data with HTTP status code 200 (OK).
- * If the retrieval fails (e.g., invalid task data), it returns an error message with HTTP status code 401 (Unauthorized).
- *
- * @param {Object} req - The request object.
+ * @param {Object} req - The request object containing user information.
  * @param {Object} res - The response object.
  * @returns {Object} The HTTP response containing either the task data or an error message in JSON format.
  */
 const getAll = asyncHandler(async(req, res) => {
-    const result = await getAllTasks()
-    if(result){
-        res.status(200).json(result)
-    } else {
-        res.status(401).json({message: 'Invalid task data'})
+    if (req.user._type === "Operational"){
+        const result = await findTasksByCodeOperator(req.user._codUser)
+        if(result.length !== 0){
+            res.status(200).json(result)
+        } else {
+            res.status(401).json({message: 'There is not task assigned to this specific operator'})
+        }
+    }else{
+        const result = await getAllTasks()
+        if(result){
+            res.status(200).json(result)
+        } else {
+            res.status(401).json({message: 'Invalid task data'})
+        }
     }
+
 })
 
 /**
@@ -166,7 +159,6 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
 
 module.exports = {
     assignTask,
-    getMyTasks,
     getAll,
     getTaskByCode,
     updateTaskByCode

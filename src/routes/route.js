@@ -7,7 +7,6 @@ router.get('/', (req, res) => {
     res.status(200).send('OK');
 })
 router.post('/assignment', verifyToken, assignTask)
-router.get('/myTasks', verifyToken, getMyTasks)
 router.get('/all', verifyToken, getAll)
 router.get('/:codTask', verifyToken, getTaskByCode)
 router.put('/:codTask', verifyToken, updateTaskByCode)
