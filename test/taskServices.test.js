@@ -79,13 +79,13 @@ describe('User services testing', () => {
         expect(res.json).not.toBeNull()
     })
 
-    it('it should return 401 if there is not tasks assigned to this operator', async () => {
+    it('it should return 200 and 0 if there is not tasks assigned to this operator', async () => {
         const res = mockResponse()
         req.user = { _codUser: "000897", _type: "Operational"}
 
         await getAll(req, res)
-        expect(res.status).toHaveBeenCalledWith(401)
-        expect(res.json).toHaveBeenCalledWith({message: "There is not task assigned to this specific operator"})
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).toHaveBeenCalledWith(0)
     })
 
     it('it should return 200 and all tasks that are stored', async() => {
