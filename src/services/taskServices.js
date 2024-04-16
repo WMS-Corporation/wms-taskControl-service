@@ -50,7 +50,7 @@ const getAll = asyncHandler(async(req, res) => {
         if(result.length !== 0){
             res.status(200).json(result)
         } else {
-            res.status(200).json(0)
+            res.status(200).json([])
         }
     }else{
         const result = await getAllTasks()
