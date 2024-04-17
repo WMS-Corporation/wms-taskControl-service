@@ -47,11 +47,7 @@ const assignTask = asyncHandler(async(req, res) => {
 const getAll = asyncHandler(async(req, res) => {
     if (req.user._type === "Operational"){
         const result = await findTasksByCodeOperator(req.user._codUser)
-        if(result.length !== 0){
-            res.status(200).json(result)
-        } else {
-            res.status(200).json([])
-        }
+        res.status(200).json(result)
     }else{
         const result = await getAllTasks()
         if(result){
