@@ -12,6 +12,11 @@ let corsOptions = {
 };
 dotenv.config();
 const app = express();
+
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger-doc.json'); // Importa il file di documentazione Swagger JSON
+app.use('/doc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 app.disable("x-powered-by");
 app.use(express.json());
 app.use(cors(corsOptions));

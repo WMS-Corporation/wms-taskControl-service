@@ -11,7 +11,8 @@
     "eslint": "npx eslint .",
     "format": "npm run format-src && npm run format-test",
     "format-src": "npx eslint --fix .\\*.js",
-    "format-test": "npx eslint --fix .\\test\\*.js"
+    "format-test": "npx eslint --fix .\\test\\*.js",
+    "swagger": "node ./swagger.js"
   },
   "author": "",
   "license": "ISC",
@@ -29,6 +30,9 @@
     "express-async-handler": "^1.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.4.0",
-    "supertest": "^6.3.4"
+    "supertest": "^6.3.4",
+    "swagger-autogen": "^2.23.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0"
   }
 }
