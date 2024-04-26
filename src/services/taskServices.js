@@ -16,9 +16,21 @@ const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateT
  * @returns {Object} The HTTP response with the task created.
  */
 const assignTask = asyncHandler(async(req, res) => {
-    const task = createTaskFromData(req.body)
-    if(!task.type || !task.date || !task.status || !task.codOperator || !task.productCodeList){
+    let task
+    if(verifyBodyFields(req.body, "Create")){
+        task = createTaskFromData(req.body)
+    } else {
+        return res.status(401).json({ message: 'Invalid request body. Please ensure all required fields are included and in the correct format.' })
+    }
+
+    if(!task.type || !task.date || !task.status || !task.codOperator || !task.productList){
         return res.status(401).json({ message: 'Invalid task data' })
+    }
+
+    for(let product of task.productList){
+        if(!product._codProduct || (!product._from && !product._to) || !product._quantity){
+            return res.status(401).json({ message: 'Invalid product data' })
+        }
     }
 
     task.codTask = await generateUniqueTaskCode()
@@ -104,42 +116,36 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
     const tasksOfOperator = await findTasksByCodeOperator(req.user._codUser)
     let taskFound = false;
 
-    const validFields = [
-        "_codOperator",
-        "_date",
-        "_type",
-        "_status",
-        "_productCodeList",
-    ];
-
-    let foundValidField = false;
-
-    for (const field of validFields) {
-        if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-            foundValidField = true
-            break;
-        }
-    }
-
-    if(!foundValidField){
-        res.status(401).json({message: 'Task does not contain any of the specified fields.'})
-    } else {
+    if(!verifyBodyFields(req.body, "Update")){
+        res.status(401).json({message: 'Invalid request body. Please ensure all required fields are included and in the correct format.'})
+    } else{
         for (const task of tasksOfOperator) {
             if (task._codTask === codTask) {
+                const updateData = handleUpdateData(req.body, task)
+                if(!updateData){
+                    res.status(401).json({message: 'The products specified in the request body does not exist in the task\'s product list.'})
+                    return
+                }
                 taskFound = true;
                 const filter = { _codTask: codTask }
-                const update = { $set: req.body}
-                const updatedTask = await updateTaskData(filter, update)
+                const updatedTask = await updateTaskData(filter, updateData)
                 res.status(200).json(updatedTask)
+                if(updatedTask._status === "Completed"){
+                    sendDataToLogistic(updatedTask._productList, req)
+                }
                 break;
             }
         }
         if(!taskFound && req.user._type === "Admin"){
             const task = await findTaskByCode(codTask)
             if(task){
+                const updateData = handleUpdateData(req.body, task)
+                if(!updateData){
+                    res.status(401).json({message: 'The products specified in the request body does not exist in the task\'s product list.'})
+                    return
+                }
                 const filter = { _codTask: codTask }
-                const update = { $set: req.body}
-                const updatedTask = await updateTaskData(filter, update)
+                const updatedTask = await updateTaskData(filter, updateData)
                 res.status(200).json(updatedTask)
             } else {
                 res.status(401).json({message: 'Task not found'})
@@ -152,6 +158,120 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
     }
 
 })
+
+/**
+ * Function to handle updating task data based on the provided body and existing task.
+ *
+ * @param {Object} body - The body containing the update data.
+ * @param {Object} task - The existing task data.
+ * @return {Object|null} - The update object or null if any product to be updated does not exist.
+**/
+const handleUpdateData = (body, task) => {
+    if (body._productList) {
+        const taskProductList = task._productList
+        const productListToUpdate  = body._productList
+
+        const allProductsExist   = productListToUpdate.every(productToUpdate =>
+            taskProductList.some(taskProduct => taskProduct._codProduct === productToUpdate._codProduct)
+        );
+
+        if (allProductsExist) {
+            const update = { $set: {} };
+            Object.keys(body).forEach(key => {
+                if (key !== '_productList') {
+                    update.$set[key] = body[key];
+                }
+
+            });
+
+            productListToUpdate.forEach(productToUpdate => {
+                taskProductList.forEach(product => {
+                    if(product._codProduct === productToUpdate._codProduct){
+                        Object.keys(productToUpdate).forEach(field => {
+                            product[field] = productToUpdate[field]
+                        });
+                    }
+                })
+            })
+
+            update.$set["_productList"] = taskProductList;
+            return update;
+        } else {
+            return null;
+        }
+    } else {
+        const update = { $set: body };
+        return update;
+    }
+}
+
+/**
+ * Function to verify the fields in the request body based on the operation type.
+ *
+ * @param {Object} body - The request body to be verified.
+ * @param {string} operation - The type of operation (e.g., "Create" or "Update").
+ * @return {boolean} - Indicates whether the fields in the body are valid for the specified operation.
+**/
+const verifyBodyFields = (body, operation) => {
+    const taskValidFields = [
+        "_codOperator",
+        "_date",
+        "_type",
+        "_status",
+        "_productList",
+    ];
+
+    const productValidFields = [
+        "_codProduct",
+        "_from",
+        "_to",
+        "_quantity"
+    ];
+
+    const validateFields = (fields, body, requireAll) => {
+        const presentFields = Object.keys(body);
+        const missingFields = fields.filter(field => !presentFields.includes(field));
+
+        if (requireAll) {
+            return missingFields.length === 0 && presentFields.length === fields.length;
+        } else {
+            return presentFields.every(field => fields.includes(field));
+        }
+    };
+
+    if (operation === "Create") {
+        return validateFields(taskValidFields, body, true) &&
+            body._productList.every(product => validateFields(productValidFields,  product, true ));
+    } else {
+        return validateFields(taskValidFields, body) &&
+            (!body._productList || body._productList.every(product => (validateFields(productValidFields, product)) && product._codProduct));
+    }
+}
+
+const sendDataToLogistic = (data, req) => {
+    const requestOptions = {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        //body: {'_productList': data},
+        user: req.user
+    };
+
+    const url = 'http://localhost:4005/shelf/000017';
+
+    fetch(url, requestOptions)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error during the request: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Risposta dal server:', data);
+        })
+        .catch(error => {
+            console.error('Errore durante la richiesta:', error);
+        });
+}
 
 module.exports = {
     assignTask,

@@ -3,6 +3,16 @@
   "_date": "11/03/2023",
   "_type": "loading",
   "_status": "pending",
-  "_productCodeList": [ "00003", "00004"],
+  "_productList": [{
+    "_codProduct" : "000003",
+    "_from": null,
+    "_to": "000123",
+    "_quantity": 20
+  },{
+    "_codProduct" : "000004",
+    "_from": null,
+    "_to": "000124",
+    "_quantity": 30
+  }],
   "_codTask": "000543"
 }

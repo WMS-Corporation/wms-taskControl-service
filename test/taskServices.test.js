@@ -39,20 +39,66 @@ describe('User services testing', () => {
         await closeDB()
     });
 
-    it('it should return 401 if the data are invalid', async () => {
+    it('it should return 401 if the body are invalid', async () => {
         const res = mockResponse()
         req.body = {
             _codOperator: "000006",
             _date: "14/03/2024",
             _type: "",
             _status: "",
-            _productCodeList: ""
+            _productList: [{
+                "_codProduct" : "000003",
+                "_from": null,
+                "_to": "000123"
+            }]
+        }
+
+        await assignTask(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({ message: 'Invalid request body. Please ensure all required fields are included and in the correct format.'})
+    });
+
+    it('it should return 401 if the task data are invalid', async () => {
+        const res = mockResponse()
+        req.body = {
+            _codOperator: "000006",
+            _date: "14/03/2024",
+            _type: "",
+            _status: "",
+            _productList: [{
+                _codProduct: "000003",
+                _from: null,
+                _to: "000123",
+                _quantity: 10
+            }]
         }
 
         await assignTask(req, res)
 
         expect(res.status).toHaveBeenCalledWith(401)
         expect(res.json).toHaveBeenCalledWith({ message: 'Invalid task data'})
+    });
+
+    it('it should return 401 if the product data are invalid', async () => {
+        const res = mockResponse()
+        req.body = {
+            _codOperator: "000006",
+            _date: "14/03/2024",
+            _type: "Loading",
+            _status: "Pending",
+            _productList: [{
+                _codProduct: "",
+                _from: null,
+                _to: "000123",
+                _quantity: ""
+            }]
+        }
+
+        await assignTask(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({ message: 'Invalid product data'})
     });
 
     it('it should return 200 if registration is successful', async () => {
@@ -62,7 +108,17 @@ describe('User services testing', () => {
             _date: "14/03/2024",
             _type: "Unloading",
             _status: "pending",
-            _productCodeList: [ "00020", "00024"]
+            _productList: [{
+                _codProduct : "000003",
+                _from: null,
+                _to: "000123",
+                _quantity: 20
+            }, {
+                _codProduct : "000004",
+                _from: null,
+                _to: "000124",
+                _quantity: 30
+            }]
         }
 
         await assignTask(req, res)
@@ -162,7 +218,7 @@ describe('User services testing', () => {
         };
         await updateTaskByCode(req, res)
         expect(res.status).toHaveBeenCalledWith(401)
-        expect(res.json).toHaveBeenCalledWith({message: "Task does not contain any of the specified fields."})
+        expect(res.json).toHaveBeenCalledWith({message: "Invalid request body. Please ensure all required fields are included and in the correct format."})
     })
 
     it('it should return 200 if the admin try to update task with a new status', async () => {
@@ -176,7 +232,7 @@ describe('User services testing', () => {
         expect(res.json).not.toBeNull()
     })
 
-    it('it should return 200 if the admin try to update task that not exists', async () => {
+    it('it should return 401 if the admin try to update task that not exists', async () => {
         const res = mockResponse()
         req.user = { _codUser: "000001", _type: "Admin"}
         req.params = { codTask: "001543" }
@@ -185,5 +241,35 @@ describe('User services testing', () => {
         await updateTaskByCode(req, res)
         expect(res.status).toHaveBeenCalledWith(401)
         expect(res.json).toHaveBeenCalledWith({message: "Task not found"})
+    })
+
+    it('it should return 401 if the admin try to update the quantity of a product that is not specified in the task', async () => {
+        const res = mockResponse()
+        req.user = { _codUser: "000001", _type: "Admin"}
+        req.params = { codTask: "000543" }
+        req.body = { "_productList": [{
+                "_codProduct" : "000005",
+                "_quantity": 10
+            }]
+        }
+
+        await updateTaskByCode(req, res)
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({message: "The products specified in the request body does not exist in the task\'s product list."})
+    })
+
+    it('it should return 200 if the admin try to update the quantity of a product specified in the task', async () => {
+        const res = mockResponse()
+        req.user = { _codUser: "000001", _type: "Admin"}
+        req.params = { codTask: "000543" }
+        req.body = { "_productList": [{
+                "_codProduct" : "000004",
+                "_quantity": 10
+            }]
+        }
+
+        await updateTaskByCode(req, res)
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).not.toBeNull()
     })
 });

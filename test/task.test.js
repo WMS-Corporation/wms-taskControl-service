@@ -33,7 +33,7 @@ describe('Task testing', () => {
     });
 
     it('should return the number of products', () => {
-        expect(task.productCodeList.length).toBe(2);
+        expect(task.productList.length).toBe(2);
     });
 
     it('should set codOperator correctly', () => {

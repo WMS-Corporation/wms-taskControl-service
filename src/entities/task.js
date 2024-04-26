@@ -1,10 +1,10 @@
 class Task{
-    constructor(codOperator, date, type, status, productCodeList, codTask) {
+    constructor(codOperator, date, type, status, productList, codTask) {
         this._codOperator = codOperator;
         this._date = date;
         this._type = type;
         this._status = status;
-        this._productCodeList = productCodeList;
+        this._productList = productList;
         this._codTask = codTask;
     }
 
@@ -40,12 +40,12 @@ class Task{
         this._status = value;
     }
 
-    get productCodeList() {
-        return this._productCodeList;
+    get productList() {
+        return this._productList;
     }
 
-    set productCodeList(value) {
-        this._productCodeList = value;
+    set productList(value) {
+        this._productList = value;
     }
 
     get codTask() {
