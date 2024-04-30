@@ -248,28 +248,35 @@ const verifyBodyFields = (body, operation) => {
     }
 }
 
+/**
+ * Sends data to the logistic service when the task is completed.
+ *
+ * @param {Array} data - The data to be sent for transfer.
+ * @param {Object} req - The request object containing headers and user information.
+ */
 const sendDataToLogistic = (data, req) => {
+    let authorization = req.headers.authorization
     const requestOptions = {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        //body: {'_productList': data},
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': authorization},
+        body: JSON.stringify({ '_productList': data }),
         user: req.user
     };
 
-    const url = 'http://localhost:4005/shelf/000017';
+    const url = 'http://localhost:4005/shelf/transfer';
 
     fetch(url, requestOptions)
         .then(response => {
             if (!response.ok) {
-                throw new Error('Error during the request: ' + response.statusText);
+                throw new Error(response.statusText);
             }
             return response.json();
         })
         .then(data => {
-            console.log('Risposta dal server:', data);
+            console.log('Response from server:', data);
         })
         .catch(error => {
-            console.error('Errore durante la richiesta:', error);
+            console.error('Error during the request:', error);
         });
 }
 

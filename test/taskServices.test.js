@@ -175,7 +175,7 @@ describe('User services testing', () => {
         const res = mockResponse()
         req.user = { _codUser: "000002"}
         req.params = { codTask: "000543" }
-        req.body = { _status: "Completed"}
+        req.body = { _type: "Unloading"}
 
         await updateTaskByCode(req, res)
         expect(res.status).toHaveBeenCalledWith(200)
