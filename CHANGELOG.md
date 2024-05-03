@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.1.0](https://github.com/WMS-Corporation/wms-taskControl-service/compare/v1.0.1...v1.1.0) (2024-05-03)
+
+
+### Features
+
+* Implemented method that send product's data to logistic service when task is completed ([3c37510](https://github.com/WMS-Corporation/wms-taskControl-service/commit/3c37510b35ab0873960cb50e969a8d707880ea0a))
+
+
+### Bug Fixes
+
+* Added control if counter collection exists ([47c8352](https://github.com/WMS-Corporation/wms-taskControl-service/commit/47c8352d8629f7f5a735cb2036fb5a93eda15742))
+* Modified function that return all Tasks avainable ([f40c072](https://github.com/WMS-Corporation/wms-taskControl-service/commit/f40c072b69dd42cd0aec0181b70e45a39a2a54e1))
+* Modified method that update task data ([9b7e8d9](https://github.com/WMS-Corporation/wms-taskControl-service/commit/9b7e8d9635685d38ec658a98ac0f65239e5d343b))
+* **task:** getAll return empty list if no result instead of 0 ([15a818e](https://github.com/WMS-Corporation/wms-taskControl-service/commit/15a818e0ec5912d933e5fa59ed2744927ddf53f0))
+* Updated method that return the tasks assigned ([824633f](https://github.com/WMS-Corporation/wms-taskControl-service/commit/824633f17357ae8a0d5116999e683d5df728b79e))
+* Updated method that return the tasks assigned ([647047e](https://github.com/WMS-Corporation/wms-taskControl-service/commit/647047e64aa34d131d09b73a8ee7a6d73d2cb2da))
+* Updated product structure in Task and implemented control about the upated of product list ([553ba4e](https://github.com/WMS-Corporation/wms-taskControl-service/commit/553ba4e93b4a721b1b4e59025599994397aaee62))
+* Updated the structure of task product list and added body field validation and data modification methods ([c0bef2f](https://github.com/WMS-Corporation/wms-taskControl-service/commit/c0bef2f670a9c9652815337253e0cd9577fab906))
+
 ## [1.0.1](https://github.com/WMS-Corporation/wms-taskControl-service/compare/v1.0.0...v1.0.1) (2024-03-19)
 
 
