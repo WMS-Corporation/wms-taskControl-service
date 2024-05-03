@@ -24,10 +24,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+
       - name: Start MongoDB
         uses: ankane/setup-mongodb@v1
         with:
           mongodb-version: ${{ matrix.mongodb-version }}
+
       - name: Install Dependencies
         run: npm install
 
@@ -44,5 +46,6 @@ jobs:
           COUNTER_COLLECTION: "Counter"
           JWT_SECRET: "secret_key"
           PORT: "4003"
+
       - name: Run EsLint quality check
         run: npm run eslint

@@ -1,4 +1,3 @@
-
 const asyncHandler = require("express-async-handler");
 const {createTaskFromData} = require("../factories/taskFactory");
 const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateTaskData, generateUniqueTaskCode} = require("../repositories/taskRepository");
@@ -17,7 +16,7 @@ const {createTask, findTasksByCodeOperator, getAllTasks, findTaskByCode, updateT
  */
 const assignTask = asyncHandler(async(req, res) => {
     let task
-    if(verifyBodyFields(req.body, "Create")){
+    if(verifyBodyFields(req.body, "Create", taskValidFields, productValidFields)){
         task = createTaskFromData(req.body)
     } else {
         return res.status(401).json({ message: 'Invalid request body. Please ensure all required fields are included and in the correct format.' })
@@ -116,15 +115,14 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
     const tasksOfOperator = await findTasksByCodeOperator(req.user._codUser)
     let taskFound = false;
 
-    if(!verifyBodyFields(req.body, "Update")){
+    if(!verifyBodyFields(req.body, "Update", taskValidFields, productValidFields)){
         res.status(401).json({message: 'Invalid request body. Please ensure all required fields are included and in the correct format.'})
     } else{
         for (const task of tasksOfOperator) {
             if (task._codTask === codTask) {
                 const updateData = handleUpdateData(req.body, task)
                 if(!updateData){
-                    res.status(401).json({message: 'The products specified in the request body does not exist in the task\'s product list.'})
-                    return
+                    return res.status(401).json({message: 'Missing product data.'})
                 }
                 taskFound = true;
                 const filter = { _codTask: codTask }
@@ -141,8 +139,7 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
             if(task){
                 const updateData = handleUpdateData(req.body, task)
                 if(!updateData){
-                    res.status(401).json({message: 'The products specified in the request body does not exist in the task\'s product list.'})
-                    return
+                    return res.status(401).json({message: 'Missing product data.'})
                 }
                 const filter = { _codTask: codTask }
                 const updatedTask = await updateTaskData(filter, updateData)
@@ -162,71 +159,70 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
 /**
  * Function to handle updating task data based on the provided body and existing task.
  *
+ * This function takes the update data from the request body and the existing task data.
+ * If product list is provided, it iterates through the products in the update data and updates the corresponding products in the existing task.
+ * If a product to be updated does not exist in the existing task, it adds the new product to the task.
+ * The updated task data, including the modified product list, is returned.
+ * If no product list is provided in the update data, the entire body is treated as the update, excluding the product list.
+ *
  * @param {Object} body - The body containing the update data.
  * @param {Object} task - The existing task data.
  * @return {Object|null} - The update object or null if any product to be updated does not exist.
-**/
+ **/
 const handleUpdateData = (body, task) => {
     if (body._productList) {
-        const taskProductList = task._productList
+        const taskProductMap = new Map(task._productList.map(product => [product._codProduct, product]))
         const productListToUpdate  = body._productList
 
-        const allProductsExist   = productListToUpdate.every(productToUpdate =>
-            taskProductList.some(taskProduct => taskProduct._codProduct === productToUpdate._codProduct)
-        );
+        const update = { $set: {} };
+        Object.keys(body).forEach(key => {
+            if (key !== '_productList') {
+                update.$set[key] = body[key];
+            }
+        });
 
-        if (allProductsExist) {
-            const update = { $set: {} };
-            Object.keys(body).forEach(key => {
-                if (key !== '_productList') {
-                    update.$set[key] = body[key];
+        let productInvalid = false
+
+        productListToUpdate.forEach(productToUpdate => {
+            let product = taskProductMap.get(productToUpdate._codProduct)
+            if(product){
+                Object.keys(productToUpdate).forEach(field => {
+                    product[field] = productToUpdate[field]
+                });
+            } else {
+                if(!verifyBodyFields(productToUpdate, "Create", productValidFields)){
+                    productInvalid = true
+                } else{
+                    taskProductMap.set(productToUpdate._codProduct, productToUpdate)
                 }
+            }
+        })
 
-            });
-
-            productListToUpdate.forEach(productToUpdate => {
-                taskProductList.forEach(product => {
-                    if(product._codProduct === productToUpdate._codProduct){
-                        Object.keys(productToUpdate).forEach(field => {
-                            product[field] = productToUpdate[field]
-                        });
-                    }
-                })
-            })
-
-            update.$set["_productList"] = taskProductList;
-            return update;
+        if(productInvalid){
+            return null
         } else {
-            return null;
+            update.$set["_productList"] = Array.from(taskProductMap.values())
+            return update;
         }
     } else {
-        const update = { $set: body };
-        return update;
+        return { $set: body }
     }
 }
 
 /**
- * Function to verify the fields in the request body based on the operation type.
+ * Verifies the fields in the request body based on the operation type and the valid fields for the main entity and sub-entities.
+ *
+ * This function checks whether the fields in the request body are valid for the specified operation type ("Create" or "Update").
+ * It validates the presence and correctness of required fields for the main entity and its sub-entities.
+ * Returns true if all fields are valid; otherwise, returns false.
  *
  * @param {Object} body - The request body to be verified.
  * @param {string} operation - The type of operation (e.g., "Create" or "Update").
+ * @param {Array} validFields - The array of valid fields for the main entity.
+ * @param {Array} subEntityValidFields - The array of valid fields for sub-entities.
  * @return {boolean} - Indicates whether the fields in the body are valid for the specified operation.
-**/
-const verifyBodyFields = (body, operation) => {
-    const taskValidFields = [
-        "_codOperator",
-        "_date",
-        "_type",
-        "_status",
-        "_productList",
-    ];
-
-    const productValidFields = [
-        "_codProduct",
-        "_from",
-        "_to",
-        "_quantity"
-    ];
+ */
+const verifyBodyFields = (body, operation, validFields, subEntityValidFields) => {
 
     const validateFields = (fields, body, requireAll) => {
         const presentFields = Object.keys(body);
@@ -235,18 +231,42 @@ const verifyBodyFields = (body, operation) => {
         if (requireAll) {
             return missingFields.length === 0 && presentFields.length === fields.length;
         } else {
-            return presentFields.every(field => fields.includes(field));
+            if(presentFields.length === 1 && presentFields[0] === "_codProduct")
+                return false
+            else
+                return presentFields.every(field => fields.includes(field));
         }
     };
 
+    const isArrayOfJSON = Object.values(body).some(value => Array.isArray(value) &&
+        value.every(item => typeof item === 'object' && item !== null))
+
     if (operation === "Create") {
-        return validateFields(taskValidFields, body, true) &&
-            body._productList.every(product => validateFields(productValidFields,  product, true ));
+        return validateFields(validFields, body, true) &&
+            (!isArrayOfJSON || Object.values(body).some(value => Array.isArray(value) &&
+                value.every(item => validateFields(subEntityValidFields, item, true))))
     } else {
-        return validateFields(taskValidFields, body) &&
-            (!body._productList || body._productList.every(product => (validateFields(productValidFields, product)) && product._codProduct));
+        return validateFields(validFields, body) &&
+            (!isArrayOfJSON || Object.values(body).some(value => Array.isArray(value) &&
+                value.every(item => (validateFields(subEntityValidFields, item)) && item._codProduct)));
     }
+
 }
+
+const taskValidFields = [
+    "_codOperator",
+    "_date",
+    "_type",
+    "_status",
+    "_productList",
+];
+
+const productValidFields = [
+    "_codProduct",
+    "_from",
+    "_to",
+    "_quantity"
+];
 
 /**
  * Sends data to the logistic service when the task is completed.
@@ -284,5 +304,6 @@ module.exports = {
     assignTask,
     getAll,
     getTaskByCode,
-    updateTaskByCode
+    updateTaskByCode,
+    sendDataToLogistic
 }

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon index.js",
     "test": "jest",
-    "coverage": "npm test -- --coverage --collectCoverageFrom=\"./**/*.js\" --collectCoverageFrom=!\"./**/coverage/**/*.js\" --collectCoverageFrom=!./.eslintrc.js \n",
+    "coverage": "npm test -- --coverage --collectCoverageFrom=\"./**/*.js\" --collectCoverageFrom=!\"./**/coverage/**/*.js\" --collectCoverageFrom=!./.eslintrc.js --collectCoverageFrom=!./swagger.js\n",
     "prepare": "husky",
     "eslint": "npx eslint .",
     "format": "npm run format-src && npm run format-test",
@@ -24,12 +24,14 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "cross-fetch": "^4.0.0",
     "dotenv": "^16.4.5",
     "eslint-plugin-jest": "^27.9.0",
     "express": "^4.18.3",
     "express-async-handler": "^1.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.4.0",
+    "node-fetch": "^3.3.2",
     "supertest": "^6.3.4",
     "swagger-autogen": "^2.23.7",
     "swagger-jsdoc": "^6.2.8",
