@@ -120,13 +120,10 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
     } else{
         for (const task of tasksOfOperator) {
             if (task._codTask === codTask) {
-                const updateData = handleUpdateData(req.body, task)
-                if(!updateData){
-                    return res.status(401).json({message: 'Missing product data.'})
-                }
                 taskFound = true;
+                const update = { $set: req.body }
                 const filter = { _codTask: codTask }
-                const updatedTask = await updateTaskData(filter, updateData)
+                const updatedTask = await updateTaskData(filter, update)
                 res.status(200).json(updatedTask)
                 if(updatedTask._status === "Completed"){
                     sendDataToLogistic(updatedTask._productList, req)
@@ -137,12 +134,9 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
         if(!taskFound && req.user._type === "Admin"){
             const task = await findTaskByCode(codTask)
             if(task){
-                const updateData = handleUpdateData(req.body, task)
-                if(!updateData){
-                    return res.status(401).json({message: 'Missing product data.'})
-                }
+                const update = { $set: req.body }
                 const filter = { _codTask: codTask }
-                const updatedTask = await updateTaskData(filter, updateData)
+                const updatedTask = await updateTaskData(filter, update)
                 res.status(200).json(updatedTask)
             } else {
                 res.status(401).json({message: 'Task not found'})
@@ -155,59 +149,6 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
     }
 
 })
-
-/**
- * Function to handle updating task data based on the provided body and existing task.
- *
- * This function takes the update data from the request body and the existing task data.
- * If product list is provided, it iterates through the products in the update data and updates the corresponding products in the existing task.
- * If a product to be updated does not exist in the existing task, it adds the new product to the task.
- * The updated task data, including the modified product list, is returned.
- * If no product list is provided in the update data, the entire body is treated as the update, excluding the product list.
- *
- * @param {Object} body - The body containing the update data.
- * @param {Object} task - The existing task data.
- * @return {Object|null} - The update object or null if any product to be updated does not exist.
- **/
-const handleUpdateData = (body, task) => {
-    if (body._productList) {
-        const taskProductMap = new Map(task._productList.map(product => [product._codProduct, product]))
-        const productListToUpdate  = body._productList
-
-        const update = { $set: {} };
-        Object.keys(body).forEach(key => {
-            if (key !== '_productList') {
-                update.$set[key] = body[key];
-            }
-        });
-
-        let productInvalid = false
-
-        productListToUpdate.forEach(productToUpdate => {
-            let product = taskProductMap.get(productToUpdate._codProduct)
-            if(product){
-                Object.keys(productToUpdate).forEach(field => {
-                    product[field] = productToUpdate[field]
-                });
-            } else {
-                if(!verifyBodyFields(productToUpdate, "Create", productValidFields)){
-                    productInvalid = true
-                } else{
-                    taskProductMap.set(productToUpdate._codProduct, productToUpdate)
-                }
-            }
-        })
-
-        if(productInvalid){
-            return null
-        } else {
-            update.$set["_productList"] = Array.from(taskProductMap.values())
-            return update;
-        }
-    } else {
-        return { $set: body }
-    }
-}
 
 /**
  * Verifies the fields in the request body based on the operation type and the valid fields for the main entity and sub-entities.
@@ -231,10 +172,7 @@ const verifyBodyFields = (body, operation, validFields, subEntityValidFields) =>
         if (requireAll) {
             return missingFields.length === 0 && presentFields.length === fields.length;
         } else {
-            if(presentFields.length === 1 && presentFields[0] === "_codProduct")
-                return false
-            else
-                return presentFields.every(field => fields.includes(field));
+            return presentFields.every(field => fields.includes(field));
         }
     };
 
@@ -248,7 +186,7 @@ const verifyBodyFields = (body, operation, validFields, subEntityValidFields) =>
     } else {
         return validateFields(validFields, body) &&
             (!isArrayOfJSON || Object.values(body).some(value => Array.isArray(value) &&
-                value.every(item => (validateFields(subEntityValidFields, item)) && item._codProduct)));
+                value.every(item => (validateFields(subEntityValidFields, item, true)))));
     }
 
 }

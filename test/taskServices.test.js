@@ -221,26 +221,6 @@ describe('User services testing', () => {
         expect(res.json).toHaveBeenCalledWith({message: "Invalid request body. Please ensure all required fields are included and in the correct format."})
     })
 
-    it('it should return 401 if try to adding a product in a task without specified the correct field', async () => {
-        const res = mockResponse()
-        const req = {
-            user: {
-                _codUser: "000002"
-            },
-            params: {
-                codTask: "000543"
-            }, body: {
-                _productList: [{
-                    _codProduct: "010004",
-                    _quantity: 10
-                }]
-            }
-        };
-        await updateTaskByCode(req, res)
-        expect(res.status).toHaveBeenCalledWith(401)
-        expect(res.json).toHaveBeenCalledWith({message: "Missing product data."})
-    })
-
     it('it should return 200 if the admin try to update task with a new status', async () => {
         const res = mockResponse()
         req.user = {_codUser: "000001", _type: "Admin"}
@@ -261,22 +241,6 @@ describe('User services testing', () => {
         await updateTaskByCode(req, res)
         expect(res.status).toHaveBeenCalledWith(401)
         expect(res.json).toHaveBeenCalledWith({message: "Task not found"})
-    })
-
-    it('it should return 200 if the admin try to update the quantity of a product specified in the task', async () => {
-        const res = mockResponse()
-        req.user = {_codUser: "000001", _type: "Admin"}
-        req.params = {codTask: "000543"}
-        req.body = {
-            _productList: [{
-                _codProduct: "000004",
-                _quantity: 10
-            }]
-        }
-
-        await updateTaskByCode(req, res)
-        expect(res.status).toHaveBeenCalledWith(200)
-        expect(res.json).not.toBeNull()
     })
 
 })
