@@ -61,11 +61,7 @@ const getAll = asyncHandler(async(req, res) => {
         res.status(200).json(result)
     }else{
         const result = await getAllTasks()
-        if(result){
-            res.status(200).json(result)
-        } else {
-            res.status(401).json({message: 'Invalid task data'})
-        }
+        res.status(200).json(result)
     }
 
 })
@@ -188,7 +184,6 @@ const verifyBodyFields = (body, operation, validFields, subEntityValidFields) =>
             (!isArrayOfJSON || Object.values(body).some(value => Array.isArray(value) &&
                 value.every(item => (validateFields(subEntityValidFields, item, true)))));
     }
-
 }
 
 const taskValidFields = [
