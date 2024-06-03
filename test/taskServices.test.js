@@ -29,17 +29,6 @@ const mockFetch = jest.fn().mockImplementation(async (url, requestOptions) => {
     return Promise.resolve(defaultResponse);
 })
 
-const mockValidateTask = jest.fn().mockImplementation(async (data, req, service) => {
-    const defaultResponse = {
-        status: 401,
-        data: async () => ({ someData: 'someValue' })
-    }
-
-    return Promise.resolve(defaultResponse);
-})
-//validateTaskProductConstraints = jest.fn()
-
-global.validateTaskProductConstraints = mockValidateTask
 global.fetch = mockFetch
 
 describe('Task services testing', () => {
