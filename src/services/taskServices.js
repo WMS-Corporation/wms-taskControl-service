@@ -30,6 +30,19 @@ const assignTask = asyncHandler(async(req, res) => {
         if(!product._codProduct || (!product._from && !product._to) || !product._quantity){
             return res.status(401).json({ message: 'Invalid product data' })
         }
+        let responseProductService = await validateTaskProductConstraints(product, req, 'product')
+        let responseLogisticService = await validateTaskProductConstraints(product, req, 'logistic')
+        if(responseProductService.status === 401){
+            return res.status(401).json({ message: 'Product not defined.' })
+        }
+        switch (responseLogisticService.status){
+            case 401:
+                return res.status(401).json({ message: 'Shelf not found.' })
+            case 402:
+                return res.status(401).json({ message: 'Product not defined in a shelf.' })
+            case 403:
+                return res.status(401).json({ message: 'The requested quantity exceeds the available stock for the product.' })
+        }
     }
 
     task.codTask = await generateUniqueTaskCode()
@@ -114,6 +127,23 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
     if(!verifyBodyFields(req.body, "Update", taskValidFields, productValidFields)){
         res.status(401).json({message: 'Invalid request body. Please ensure all required fields are included and in the correct format.'})
     } else{
+        if(req.body._productList){
+            for(let product of req.body._productList){
+                let responseProductService = await validateTaskProductConstraints(product, req, 'product')
+                let responseLogisticService = await validateTaskProductConstraints(product, req, 'logistic')
+                if(responseProductService.status === 401){
+                    return res.status(401).json({ message: 'Product not defined.' })
+                }
+                switch (responseLogisticService.status){
+                    case 401:
+                        return res.status(401).json({ message: 'Shelf not found.' })
+                    case 402:
+                        return res.status(401).json({ message: 'Product not defined in a shelf.' })
+                    case 403:
+                        return res.status(401).json({ message: 'The requested quantity exceeds the available stock for the product.' })
+                }
+            }
+        }
         for (const task of tasksOfOperator) {
             if (task._codTask === codTask) {
                 taskFound = true;
@@ -233,10 +263,96 @@ const sendDataToLogistic = (data, req) => {
         });
 }
 
+/**
+ * Fetches data from the specified URL using the provided request options.
+ *
+ * @param {string} url - The URL to fetch data from.
+ * @param {Object} req - The request object containing headers and user information.
+ * @returns {Promise<Object>} A promise that resolves to an object containing the status and data.
+ *                           - { status: 200, data } if the request is successful.
+ *                           - { status: 401 } if the response is not OK.
+ *                           - { status: 500 } if there is an error during the request.
+ */
+const fetchData = async (url, req) => {
+    let authorization = req.headers.authorization
+    const requestOptions = {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'Authorization': authorization},
+        user: req.user
+    }
+
+    try {
+        const response = await fetch(url, requestOptions)
+        if (!response.ok) {
+            return { status: 401 }
+        }
+        const data = await response.json()
+        return { status: 200, data }
+    } catch (error) {
+        console.error('Error during the request:', error)
+        return { status: 500 }
+    }
+}
+
+/**
+ * Validates the constraints of a task's product based on the specified service type.
+ *
+ * @param {Object} data - The data object containing product and logistic information.
+ * @param {Object} req - The request object containing headers and user information.
+ * @param {string} service - The type of service to validate ('product' or 'logistic').
+ * @returns {Promise<Object>} A promise that resolves to an object containing the status.
+ *                           - { status: 200 } if the validation is successful.
+ *                           - { status: 401 } if the shelf or product is not found.
+ *                           - { status: 402 } if the product is not defined in a shelf.
+ *                           - { status: 403 } if the requested quantity exceeds the available stock.
+ */
+const validateTaskProductConstraints = asyncHandler (async (data, req, service) => {
+
+    switch(service){
+        case 'product':
+            var url = 'http://localhost:4002/' + data._codProduct
+            return await fetchData(url, req)
+
+        case 'logistic':
+            if(data._from){
+                const fromUrl = 'http://localhost:4005/shelf/' + data._from
+                const fromResponse = await fetchData(fromUrl, req)
+
+                if (fromResponse.status !== 200) {
+                    return fromResponse
+                }
+
+                const productExist = fromResponse.data._productList.find(product => product._codProduct === data._codProduct)
+
+                if (!productExist) {
+                    return { status: 402 }
+                }
+
+                if ((productExist._stock - data._quantity) < 0) {
+                    return { status: 403 }
+                }
+                return fromResponse
+            }
+
+            if(data._to){
+                const toUrl = 'http://localhost:4005/shelf/' + data._to
+                const toResponse = await fetchData(toUrl, req)
+                if (toResponse.status !== 200) {
+                    return toResponse
+                }
+                return toResponse
+            }
+
+    }
+
+})
+
 module.exports = {
     assignTask,
     getAll,
     getTaskByCode,
     updateTaskByCode,
-    sendDataToLogistic
+    sendDataToLogistic,
+    fetchData,
+    validateTaskProductConstraints
 }

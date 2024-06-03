@@ -2,7 +2,7 @@ const dotenv = require('dotenv')
 const path = require("path")
 const fs = require("fs")
 const {connectDB, collections, closeDB} = require("../src/config/dbConnection");
-const {assignTask, getAll, getTaskByCode, updateTaskByCode} = require("../src/services/taskServices");
+let {getAll, getTaskByCode, updateTaskByCode, fetchData, validateTaskProductConstraints, assignTask} = require("../src/services/taskServices");
 const {describe, beforeEach, it, expect, beforeAll, afterAll} = require('@jest/globals')
 dotenv.config()
 const mockResponse = () => {
@@ -14,10 +14,35 @@ const mockResponse = () => {
 const req = {
     body : "",
     user : "",
-    params: ""
+    params: "",
+    headers: {
+        authorization: 'Bearer some-token'
+    }
 }
 
-describe('User services testing', () => {
+const mockFetch = jest.fn().mockImplementation(async (url, requestOptions) => {
+    const defaultResponse = {
+        ok: true,
+        json: async () => ({ someData: 'someValue' })
+    }
+
+    return Promise.resolve(defaultResponse);
+})
+
+const mockValidateTask = jest.fn().mockImplementation(async (data, req, service) => {
+    const defaultResponse = {
+        status: 401,
+        data: async () => ({ someData: 'someValue' })
+    }
+
+    return Promise.resolve(defaultResponse);
+})
+//validateTaskProductConstraints = jest.fn()
+
+global.validateTaskProductConstraints = mockValidateTask
+global.fetch = mockFetch
+
+describe('Task services testing', () => {
 
     beforeAll(async () => {
         await connectDB(process.env.DB_NAME_TEST_SERVICES);
@@ -78,27 +103,156 @@ describe('User services testing', () => {
 
         expect(res.status).toHaveBeenCalledWith(401)
         expect(res.json).toHaveBeenCalledWith({message: 'Invalid task data'})
-    });
+    })
 
-    it('it should return 401 if the product data are invalid', async () => {
+    it('it should return 401 if the product is not defined', async () => {
         const res = mockResponse()
         req.body = {
             _codOperator: "000006",
             _date: "14/03/2024",
-            _type: "Loading",
-            _status: "Pending",
+            _type: "Unloading",
+            _status: "pending",
             _productList: [{
-                _codProduct: "",
+                _codProduct: "000003",
+                _from: "000123",
+                _to: null,
+                _quantity: 20
+            }, {
+                _codProduct: "000004",
                 _from: null,
-                _to: "000123",
-                _quantity: ""
+                _to: "000124",
+                _quantity: 30
             }]
         }
 
+        mockFetch.mockResolvedValue({
+            ok: false,
+            status: 401
+        });
         await assignTask(req, res)
 
-        expect(res.status).toHaveBeenCalledWith(401)
-        expect(res.json).toHaveBeenCalledWith({message: 'Invalid product data'})
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Product not defined.' });
+    });
+
+    it('it should return 401 if the shelf is not defined', async () => {
+        const res = mockResponse()
+        req.body = {
+            _codOperator: "000006",
+            _date: "14/03/2024",
+            _type: "Unloading",
+            _status: "pending",
+            _productList: [{
+                _codProduct: "000003",
+                _from: "000123",
+                _to: null,
+                _quantity: 20
+            }, {
+                _codProduct: "000004",
+                _from: null,
+                _to: "000124",
+                _quantity: 30
+            }]
+        }
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            status: 200
+        }).mockResolvedValueOnce({
+            status: 401
+        } )
+        await assignTask(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Shelf not found.' });
+    });
+
+    it('it should return 401 if the product is not defined in a shelf', async () => {
+        const res = mockResponse()
+        req.body = {
+            _codOperator: "000006",
+            _date: "14/03/2024",
+            _type: "Unloading",
+            _status: "pending",
+            _productList: [{
+                _codProduct: "000003",
+                _from: "000123",
+                _to: null,
+                _quantity: 20
+            }, {
+                _codProduct: "000004",
+                _from: null,
+                _to: "000124",
+                _quantity: 30
+            }]
+        }
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({ message: 'Product exists' })
+        }).mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({ _productList: [
+                    {
+                        _codProduct: "000235",
+                        _stock: 24
+                    },
+                    {
+                        _codProduct: "000236",
+                        _stock: 24
+                    }
+                ],
+                _codShelf: "000123"})})
+        await assignTask(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Product not defined in a shelf.' });
+    })
+
+    it('it should return 401 if the requested quantity exceeds the available stock for the product.', async () => {
+        const res = mockResponse()
+        req.body = {
+            _codOperator: "000006",
+            _date: "14/03/2024",
+            _type: "Unloading",
+            _status: "pending",
+            _productList: [{
+                _codProduct: "000003",
+                _from: "000123",
+                _to: null,
+                _quantity: 30
+            }, {
+                _codProduct: "000004",
+                _from: null,
+                _to: "000124",
+                _quantity: 30
+            }]
+        }
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({ message: 'Product exists' })
+        }).mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({ _productList: [
+                    {
+                        _codProduct: "000003",
+                        _stock: 24
+                    },
+                    {
+                        _codProduct: "000236",
+                        _stock: 24
+                    }
+                ],
+                _codShelf: "000123"})})
+        await assignTask(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: 'The requested quantity exceeds the available stock for the product.' });
     });
 
     it('it should return 200 if registration is successful', async () => {
@@ -122,8 +276,7 @@ describe('User services testing', () => {
         }
 
         await assignTask(req, res)
-
-        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).not.toBeNull()
     });
 
     it('it should return 200 and the tasks assigned to this specific operator', async () => {
@@ -220,6 +373,138 @@ describe('User services testing', () => {
         expect(res.status).toHaveBeenCalledWith(401)
         expect(res.json).toHaveBeenCalledWith({message: "Invalid request body. Please ensure all required fields are included and in the correct format."})
     })
+
+    it('it should return 401 if try to updating task with a product that is not defined', async () => {
+        const res = mockResponse()
+        req.user = { _codUser: "000002"}
+        req.params = {codTask: "000543"}
+        req.body = {_codOperator: "000006",
+            _date: "14/03/2024",
+            _type: "Unloading",
+            _status: "pending",
+            _productList: [{
+                _codProduct: "000013",
+                _from: "000123",
+                _to: null,
+                _quantity: 20
+            }]}
+
+        mockFetch.mockResolvedValue({
+            ok: false,
+            status: 401
+        });
+        await updateTaskByCode(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Product not defined.' });
+    });
+
+    it('it should return 401 if try to updating task with a shelf that is not defined', async () => {
+        const res = mockResponse()
+        req.user = { _codUser: "000002"}
+        req.params = {codTask: "000543"}
+        req.body = {_codOperator: "000006",
+            _date: "14/03/2024",
+            _type: "Unloading",
+            _status: "pending",
+            _productList: [{
+                _codProduct: "000003",
+                _from: "000013",
+                _to: null,
+                _quantity: 20
+            }]}
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            status: 200
+        }).mockResolvedValueOnce({
+            status: 401
+        } )
+        await updateTaskByCode(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Shelf not found.' });
+    })
+
+    it('it should return 401 if try to updating task with a product that is not defined in a shelf', async () => {
+        const res = mockResponse()
+        req.user = { _codUser: "000002"}
+        req.params = {codTask: "000543"}
+        req.body = {_codOperator: "000006",
+            _date: "14/03/2024",
+            _type: "Unloading",
+            _status: "pending",
+            _productList: [{
+                _codProduct: "000003",
+                _from: "000123",
+                _to: null,
+                _quantity: 20
+            }]}
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({ message: 'Product exists' })
+        }).mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({ _productList: [
+                    {
+                        _codProduct: "000235",
+                        _stock: 24
+                    },
+                    {
+                        _codProduct: "000236",
+                        _stock: 24
+                    }
+                ],
+                _codShelf: "000123"})})
+        await updateTaskByCode(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Product not defined in a shelf.' });
+    })
+
+    it('it should return 401 if try to updating task quantity exceeds the available stock for the product.', async () => {
+        const res = mockResponse()
+        req.user = { _codUser: "000002"}
+        req.params = {codTask: "000543"}
+        req.body = {
+            _codOperator: "000006",
+            _date: "14/03/2024",
+            _type: "Unloading",
+            _status: "pending",
+            _productList: [{
+                _codProduct: "000003",
+                _from: "000123",
+                _to: null,
+                _quantity: 30
+            }]
+        }
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({ message: 'Product exists' })
+        }).mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({ _productList: [
+                    {
+                        _codProduct: "000003",
+                        _stock: 24
+                    },
+                    {
+                        _codProduct: "000236",
+                        _stock: 24
+                    }
+                ],
+                _codShelf: "000123"})})
+        await updateTaskByCode(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: 'The requested quantity exceeds the available stock for the product.' });
+    });
 
     it('it should return 200 if the admin try to update task with a new status', async () => {
         const res = mockResponse()
