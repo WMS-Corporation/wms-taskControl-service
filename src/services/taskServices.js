@@ -19,7 +19,7 @@ const assignTask = asyncHandler(async(req, res) => {
     if(verifyBodyFields(req.body, "Create", taskValidFields, productValidFields)){
         task = createTaskFromData(req.body)
     } else {
-        return res.status(401).json({ message: 'Invalid request body. Please ensure all required fields are included and in the correct format.' })
+        return res.status(401).json({ message: 'Please ensure all required fields are included and in the correct format.' })
     }
 
     if(!task.type || !task.date || !task.status || !task.codOperator || !task.productList){
@@ -125,7 +125,7 @@ const updateTaskByCode = asyncHandler(async (req, res) => {
     let taskFound = false;
 
     if(!verifyBodyFields(req.body, "Update", taskValidFields, productValidFields)){
-        res.status(401).json({message: 'Invalid request body. Please ensure all required fields are included and in the correct format.'})
+        res.status(401).json({message: 'Please ensure all required fields are included and in the correct format.'})
     } else{
         if(req.body._productList){
             for(let product of req.body._productList){

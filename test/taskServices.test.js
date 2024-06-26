@@ -70,7 +70,7 @@ describe('Task services testing', () => {
         await assignTask(req, res)
 
         expect(res.status).toHaveBeenCalledWith(401)
-        expect(res.json).toHaveBeenCalledWith({message: 'Invalid request body. Please ensure all required fields are included and in the correct format.'})
+        expect(res.json).toHaveBeenCalledWith({message: 'Please ensure all required fields are included and in the correct format.'})
     });
 
     it('it should return 401 if the task data are invalid', async () => {
@@ -360,7 +360,7 @@ describe('Task services testing', () => {
         };
         await updateTaskByCode(req, res)
         expect(res.status).toHaveBeenCalledWith(401)
-        expect(res.json).toHaveBeenCalledWith({message: "Invalid request body. Please ensure all required fields are included and in the correct format."})
+        expect(res.json).toHaveBeenCalledWith({message: "Please ensure all required fields are included and in the correct format."})
     })
 
     it('it should return 401 if try to updating task with a product that is not defined', async () => {
