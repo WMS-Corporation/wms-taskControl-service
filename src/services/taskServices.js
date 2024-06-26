@@ -314,7 +314,7 @@ const validateTaskProductConstraints = asyncHandler (async (data, req, service) 
             return await fetchData(url, req)
 
         case 'logistic':
-            if(data._from){
+            if(data._from && data._from !== "Outside"){
                 const fromUrl = 'http://localhost:4005/shelf/' + data._from
                 const fromResponse = await fetchData(fromUrl, req)
 
@@ -334,7 +334,7 @@ const validateTaskProductConstraints = asyncHandler (async (data, req, service) 
                 return fromResponse
             }
 
-            if(data._to){
+            if(data._to && data._to !== "Outside"){
                 const toUrl = 'http://localhost:4005/shelf/' + data._to
                 const toResponse = await fetchData(toUrl, req)
                 if (toResponse.status !== 200) {
