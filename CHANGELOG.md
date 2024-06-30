@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/WMS-Corporation/wms-taskControl-service/compare/v1.1.0...v1.2.0) (2024-06-30)
+
+
+### Features
+
+* Add validations for product existence, shelf presence, and stock in task creation and updating ([f1eabca](https://github.com/WMS-Corporation/wms-taskControl-service/commit/f1eabca614fbfedc2f795bfab10fdc204f3b2558))
+
+
+### Bug Fixes
+
+* Update method that validate the product constraints ([600f9fb](https://github.com/WMS-Corporation/wms-taskControl-service/commit/600f9fb5a96c87e6b9d86737a7a31d702e7c83c9))
+* Updated method that modified task data ([f01a7be](https://github.com/WMS-Corporation/wms-taskControl-service/commit/f01a7bef4d44b77b4e1989de8c5c7c20f16b2b71))
+* Updated method that return all tasks stored ([3fa6d01](https://github.com/WMS-Corporation/wms-taskControl-service/commit/3fa6d01963cf94d2779ab7e5b3b90c7cfb7c50ec))
+
 ## [1.1.0](https://github.com/WMS-Corporation/wms-taskControl-service/compare/v1.0.1...v1.1.0) (2024-05-03)
 
 
