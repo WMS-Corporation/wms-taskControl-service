@@ -82,7 +82,7 @@ jobs:
     needs: testJest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.GIT_TOKEN }}
           release-type: simple
